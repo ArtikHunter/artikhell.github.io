@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10100f">
+  <meta name="description" content="Portafolio de Benjamín Bravo. Dirección audiovisual, fotografía y archivo desde Santiago de Chile.">
+  <title>Benjamín Bravo — Dirección audiovisual y fotografía</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Italiana&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="cursor-halo" aria-hidden="true"></div>
+
+  <header class="site-header" id="inicio">
+    <a class="brand" href="#inicio" aria-label="Benjamín Bravo, ir al inicio">B<span class="brand-slash">/</span>B<span class="brand-dot">.</span></a>
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      <a href="#fotografia"><span>01</span> Fotografía</a>
+      <a href="#audiovisual"><span>02</span> Cine</a>
+      <a href="#sobre-mi"><span>03</span> Sobre mí</a>
+    </nav>
+    <div class="header-actions">
+      <a class="header-contact" href="mailto:benbravod@gmail.com">Contacto <span aria-hidden="true">↗</span></a>
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú">
+        <span></span><span></span>
+      </button>
+    </div>
+    <nav class="mobile-menu" id="mobile-menu" aria-label="Menú móvil" inert>
+      <a href="#fotografia">Fotografía <span>01</span></a>
+      <a href="#audiovisual">Cine <span>02</span></a>
+      <a href="#sobre-mi">Sobre mí <span>03</span></a>
+      <a href="mailto:benbravod@gmail.com">Contacto <span>↗</span></a>
+    </nav>
+  </header>
+
+  <main id="contenido">
+    <section class="hero" aria-labelledby="hero-title" id="portada">
+      <div class="hero-ambient" aria-hidden="true"></div>
+      <canvas class="hero-waves" id="hero-waves" aria-hidden="true"></canvas>
+      <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
+      <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-light-veil" aria-hidden="true"></div>
+      <div class="hero-topline micro"><span>PORTAFOLIO / 2026</span><span>SANTIAGO, CHILE <span class="cross">✳</span> 33°26′ S</span></div>
+      <div class="hero-content">
+        <p class="hero-kicker micro reveal">Dirección audiovisual <span class="slash">/</span> Fotografía</p>
+        <h1 id="hero-title" class="hero-title"><span class="hero-title-first">Benjamín</span><span class="hero-title-second">Bravo<span class="hero-period">.</span></span></h1>
+        <div class="hero-bottomline">
+          <p>Imágenes para observar<br>el tiempo y sus huellas.</p>
+          <a class="round-arrow magnetic" href="#fotografia" aria-label="Explorar archivo fotográfico"><span aria-hidden="true">↓</span></a>
+          <p class="hero-vertical micro">CINE / FOTOGRAFÍA / ARCHIVO</p>
+        </div>
+      </div>
+      <div class="hero-foot micro"><span>EST. CHILE</span><span>DESPLÁZATE PARA EXPLORAR ↓</span><span>01 — 04</span></div>
+    </section>
+
+    <section class="intro section-pad" aria-label="Introducción">
+      <div class="section-index micro"><span>00 / PRESENTACIÓN</span><span>IMAGEN · MEMORIA · MOVIMIENTO</span></div>
+      <div class="intro-grid">
+        <p class="intro-label micro">UNA PRÁCTICA EN CONSTRUCCIÓN</p>
+        <h2 class="intro-statement">Entre la imagen fija y la imagen en movimiento<span>,</span> un archivo de miradas.</h2>
+      </div>
+    </section>
+
+    <section class="archive" id="fotografia" aria-labelledby="archive-title">
+      <div class="archive-head section-pad">
+        <h2 id="archive-title" class="archive-display-title">Fotografías<span aria-hidden="true">.</span></h2>
+      </div>
+
+      <div class="gallery-runway" id="gallery-runway">
+        <div class="gallery-sticky" id="gallery-sticky" aria-label="Explorador de colecciones fotográficas">
+          <div class="gallery-ambient" aria-hidden="true"></div>
+          <div class="gallery-collage" id="gallery-collage">
+            <div class="side-slot side-a" data-slot="0"></div>
+            <div class="side-slot side-b" data-slot="1"></div>
+            <div class="side-slot side-c" data-slot="2"></div>
+            <div class="side-slot side-d" data-slot="3"></div>
+            <div class="side-slot side-e" data-slot="4"></div>
+            <div class="side-slot side-f" data-slot="5"></div>
+
+
+            <!-- En la salida del visor las cuatro portadas se reúnen con la principal. -->
+            <div class="handoff-preview" id="handoff-preview" aria-hidden="true">
+              <div class="handoff-card" data-handoff="0"></div>
+              <div class="handoff-card" data-handoff="1"></div>
+              <div class="handoff-card" data-handoff="2"></div>
+              <div class="handoff-card" data-handoff="3"></div>
+            </div>
+
+            <article class="featured" id="featured" aria-live="polite" aria-atomic="true">
+              <div class="featured-image-wrap">
+                <img class="featured-atmosphere" id="featured-atmosphere" src="DR-1.jpg" alt="" aria-hidden="true">
+                <img id="featured-image" src="DR-1.jpg" alt="Fotografía seleccionada" fetchpriority="high">
+                <img id="featured-image-full" src="DR-1.jpg" alt="" aria-hidden="true">
+                <span class="image-fallback" id="featured-fallback" aria-hidden="true"><span>ARCHIVO<br>VISUAL</span><small>AGREGA TUS FOTOGRAFÍAS<br>A ESTA CARPETA</small></span>
+                <button type="button" class="featured-enter" id="expand-photo" aria-label="Acercar fotografía"><span class="sr-only">Acercar fotografía</span></button>
+              </div>
+              <div class="featured-shade" aria-hidden="true"></div>
+              <button type="button" class="eye-toggle" id="toggle-overlay" aria-pressed="false" aria-label="Ocultar textos y datos de la fotografía">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12 18.7 18.5 12 18.5 1.5 12 1.5 12Z"/>
+                  <circle cx="12" cy="12" r="3.5"/>
+                </svg>
+              </button>
+              <div class="featured-lower">
+                <div class="featured-titles">
+                  <h3 id="featured-title">Aprendan del Fuego</h3>
+                  <p id="featured-photo-title">Juglaría en llamas</p>
+                </div>
+                <div class="feature-controls" aria-label="Navegar fotografías de la colección">
+                  <button id="prev-photo" class="circle-button" type="button" aria-label="Fotografía anterior"><span class="arrow-glyph" aria-hidden="true">←</span><svg class="hold-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="hold-ring-track" cx="32" cy="32" r="25"/><circle class="hold-ring-progress" cx="32" cy="32" r="25"/></svg></button>
+                  <button id="next-photo" class="circle-button" type="button" aria-label="Fotografía siguiente"><span class="arrow-glyph" aria-hidden="true">→</span><svg class="hold-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="hold-ring-track" cx="32" cy="32" r="25"/><circle class="hold-ring-progress" cx="32" cy="32" r="25"/></svg></button>
+                </div>
+                <div class="featured-count" id="featured-count" aria-label="Fotografía actual">1<span>/</span>12</div>
+              </div>
+              <aside class="fullscreen-specs" id="fullscreen-specs" aria-label="Datos técnicos de la fotografía">
+                <div class="specs-topline micro"><span>DATOS TÉCNICOS</span><span id="fullscreen-photo-index">1/12</span></div>
+                <dl id="fullscreen-spec-list"></dl>
+              </aside>
+            </article>
+          </div>
+          <div class="gallery-instructions micro"><span>BENJAMÍN BRAVO</span></div>
+        </div>
+      </div>
+
+      <div class="archive-bottom section-pad" id="archive-index">
+        <div class="showcase-topline">
+          <p class="micro">ÍNDICE DE COLECCIONES</p>
+          <span class="micro" id="showcase-page-summary" aria-live="polite"></span>
+        </div>
+        <div class="showcase-gallery" id="showcase-gallery" aria-label="Vista previa de cinco colecciones">
+          <button type="button" class="showcase-card" data-showcase="0" aria-label="Ver colección"></button>
+          <button type="button" class="showcase-card" data-showcase="1" aria-label="Ver colección"></button>
+          <button type="button" class="showcase-card showcase-center" data-showcase="2" aria-label="Ampliar fotografía central"></button>
+          <button type="button" class="showcase-card" data-showcase="3" aria-label="Ver colección"></button>
+          <button type="button" class="showcase-card" data-showcase="4" aria-label="Ver colección"></button>
+        </div>
+        <div class="showcase-toolbar">
+          <div class="showcase-filters" id="showcase-filters" aria-label="Filtrar colecciones por año"></div>
+          <div class="showcase-pagination">
+            <button type="button" class="page-arrow" id="page-prev" aria-label="Página anterior">←</button>
+            <span id="page-count" class="micro" aria-live="polite">01 / 01</span>
+            <button type="button" class="page-arrow" id="page-next" aria-label="Página siguiente">→</button>
+          </div>
+        </div>
+        <div class="collection-index" id="collection-index" role="group" aria-label="Seleccionar colección"></div>
+      </div>
+    </section>
+
+    <section class="films section-pad" id="audiovisual" aria-labelledby="films-title">
+      <div class="section-index micro"><span>02 / CINE</span><span>PROYECTOS AUDIOVISUALES</span></div>
+      <div class="films-header">
+        <h2 id="films-title">Imagen en <em>movimiento.</em></h2>
+        <p>Dirección, montaje e investigación documental.</p>
+      </div>
+      <div class="film-grid">
+        <article class="film-card">
+          <div class="film-poster poster-one">
+            <span class="film-number micro">FILM / 001</span>
+            <span class="poster-mark" aria-hidden="true">I</span>
+            <span class="poster-bottom micro">FICCIÓN <span>2026</span></span>
+          </div>
+          <div class="film-info">
+            <div><h3>Olmué</h3><p>Dirección · Cortometraje de ficción</p></div>
+            <span class="film-status micro">EN PREPRODUCCIÓN</span>
+          </div>
+        </article>
+        <article class="film-card">
+          <div class="film-poster poster-two">
+            <span class="film-number micro">FILM / 002</span>
+            <span class="poster-mark poster-mark-small" aria-hidden="true">1973</span>
+            <span class="poster-bottom micro">DOCUMENTAL <span>EN DESARROLLO</span></span>
+          </div>
+          <div class="film-info">
+            <div><h3>Señales de Radio</h3><p>Dirección e investigación · Archivo histórico</p></div>
+            <span class="film-status micro">EN DESARROLLO</span>
+          </div>
+        </article>
+      </div>
+      <p class="film-note micro">LOS PROYECTOS SE PRESENTAN SIN REPRODUCTOR HASTA DISPONER DE LOS VÍDEOS DEFINITIVOS.</p>
+    </section>
+
+    <section class="about section-pad" id="sobre-mi" aria-labelledby="about-title">
+      <div class="section-index micro"><span>03 / ACERCA DE</span><span>PERFIL</span></div>
+      <div class="about-grid">
+        <div class="portrait-card">
+          <img src="perfil.jpg" alt="Retrato de Benjamín Bravo" loading="lazy">
+          <span class="portrait-fallback image-fallback" aria-hidden="true"><span>B<span class="brand-slash">/</span>B</span><small>RETRATO PERSONAL<br>PERFIL.JPG</small></span>
+          <span class="portrait-label micro">BENJAMÍN BRAVO / SANTIAGO</span>
+        </div>
+        <div class="about-content">
+          <p class="eyebrow micro">QUIÉN ESTÁ DETRÁS DE LA CÁMARA</p>
+          <h2 id="about-title">Benjamín<br><em>Bravo.</em></h2>
+          <p class="about-lede">Dirección audiovisual y fotografía. Una práctica vinculada al cine, la investigación y la creación de imágenes.</p>
+          <div class="affiliations">
+            <p class="micro">TRAYECTORIA Y VÍNCULOS</p>
+            <ul>
+              <li>Universidad de Chile</li>
+              <li>Núcleo de Investigación y Creación Cinematográfica</li>
+              <li>Sindicato Arte Trabajo</li>
+              <li>Colectivo Quinta Vértebra</li>
+            </ul>
+          </div>
+          <a class="text-link" href="mailto:benbravod@gmail.com">Hablemos de un proyecto <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact section-pad" id="contacto" aria-labelledby="contact-title">
+      <div class="section-index micro"><span>04 / CONTACTO</span><span>SANTIAGO, CHILE</span></div>
+      <p class="micro contact-overline">PARA COLABORACIONES, IDEAS Y CONVERSACIONES</p>
+      <h2 id="contact-title">Hablemos<span>.</span></h2>
+      <a class="contact-email" href="mailto:benbravod@gmail.com">benbravod@gmail.com <span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+
+  <footer class="footer micro"><span>© 2026 BENJAMÍN BRAVO</span><a href="#inicio">VOLVER ARRIBA ↑</a><span>HECHO PARA SER EXPLORADO</span></footer>
+
+
+</body>
+</html>
