@@ -46,9 +46,9 @@ Para crear una colección, copia una existente, cambia su `id` por uno único y 
 - Inicio–0,32: la imagen central crece y los laterales salen por los márgenes.
 - 0,32–0,56: visor ampliado, flechas y datos técnicos.
 - 0,56–0,69: desaparecen los textos y los mandos.
-- 0,70–0,96: la foto se reduce y se reúne con otras portadas.
+- 0,70–0,96: la foto se reduce hacia la portada central del índice real, que entra en la última pantalla del visor.
 
-Después aparece el índice con filtros y paginación. Seleccionar un lateral intercambia las portadas; seleccionar un título elige la colección. Pulsar la portada central del índice abre el visor ampliado. Las flechas del teclado cambian de foto y Escape vuelve al índice. El botón del ojo oculta los textos. En dispositivos con ratón, mantenerlo sobre una flecha cambia de foto cada cinco segundos. Con movimiento reducido se omiten las transiciones y ese avance automático.
+El índice continúa con filtros y paginación, sin otra banda duplicada. La foto del visor y la portada central se relevan en las mismas coordenadas; al subir se invierte el recorrido. Seleccionar un lateral intercambia las portadas; seleccionar un título elige la colección. Pulsar la portada central del índice abre el visor ampliado. Las flechas del teclado y A/D cambian de foto y Escape vuelve al índice. El botón del ojo cierra el ojo y oculta los textos; las flechas se vuelven pequeñas y transparentes. La lágrima aparece debajo del círculo: mantener el puntero sobre la gota oculta la interfaz y el cursor, con una indicación de navegación fuera de la imagen. Al salir de la gota se vuelve al ojo cerrado. En pantallas táctiles se alterna este modo tocando la gota, y con teclado mediante Enter o Espacio. Tab, Escape, perder el foco de la ventana o abandonar el visor restauran la interfaz. En dispositivos con ratón, mantenerlo sobre una flecha cambia de foto cada cinco segundos. Con movimiento reducido se omiten las transiciones y ese avance automático.
 
 ## Comprobaciones
 

@@ -15,6 +15,7 @@ const featured = $("#featured");
 const featuredImage = $("#featured-image");
 const featureEnter = $("#expand-photo");
 const overlayToggle = $("#toggle-overlay");
+const tearTrigger = $("#tear-trigger");
 const featuredImageFull = $("#featured-image-full");
 const featureControls = $(".feature-controls");
 let sideEntries = [];
@@ -332,13 +333,6 @@ function renderShowcasePhotos(reset = false) {
   $$(".showcase-card").forEach((node, i) =>
     populatePreview(node, showcaseSlots[i], i === 2),
   );
-  const handoffSlots = [0, 1, 3, 4];
-  $$(".handoff-card").forEach((node, i) => {
-    node.replaceChildren();
-    const collectionIndex = showcaseSlots[handoffSlots[i]];
-    if (collectionIndex !== undefined)
-      node.append(createPreviewImage(collectionIndex));
-  });
 }
 function renderYearFilters() {
   const container = $("#showcase-filters");
@@ -537,7 +531,6 @@ function renderArchivePage() {
   const all = filteredIndices();
   const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
   $("#page-count").textContent = `${pad(archivePage + 1)} / ${pad(totalPages)}`;
-  $("#showcase-page-summary").textContent = `${all.length} COLECCIONES`;
   $("#page-prev").disabled = archivePage === 0;
   $("#page-next").disabled = archivePage >= totalPages - 1;
   $$(".year-button").forEach((button) =>
@@ -742,6 +735,25 @@ function updateFullscreenSpecs() {
 }
 
 let overlayHidden = false;
+let purePhotoActive = false;
+function setPurePhotoMode(active) {
+  active = Boolean(
+    active && overlayHidden && sticky.classList.contains("is-expanded") &&
+    !sticky.classList.contains("is-gallery-retiring"),
+  );
+  if (active === purePhotoActive) return;
+  purePhotoActive = active;
+  stopHoverAdvance();
+  sticky.classList.toggle("is-photo-only", active);
+  document.body.classList.toggle("photo-only", active);
+  tearTrigger.setAttribute("aria-pressed", String(active));
+  tearTrigger.setAttribute("aria-label", active
+    ? "Volver al ojo cerrado"
+    : "Ver únicamente la fotografía");
+  overlayToggle.inert = active;
+  siteHeader.inert = active;
+  featureControls.inert = active || sticky.classList.contains("is-gallery-retiring");
+}
 function syncOverlayToggle() {
   if (!overlayToggle) return;
   overlayToggle.setAttribute("aria-pressed", String(overlayHidden));
@@ -752,10 +764,34 @@ function syncOverlayToggle() {
       : "Ocultar textos y datos de la fotografía",
   );
   sticky?.classList.toggle("is-text-hidden", overlayHidden);
+  tearTrigger.disabled = !overlayHidden;
+  if (!overlayHidden) setPurePhotoMode(false);
 }
 overlayToggle?.addEventListener("click", () => {
   overlayHidden = !overlayHidden;
+  stopHoverAdvance();
   syncOverlayToggle();
+});
+tearTrigger.addEventListener("pointerenter", (event) => {
+  if (event.pointerType === "mouse") setPurePhotoMode(true);
+});
+tearTrigger.addEventListener("pointerleave", (event) => {
+  if (event.pointerType === "mouse") setPurePhotoMode(false);
+});
+// Enter/Espacio y pantallas táctiles permiten alternar sin depender del hover.
+tearTrigger.addEventListener("click", (event) => {
+  if (event.detail === 0 || !matchMedia("(hover: hover) and (pointer: fine)").matches)
+    setPurePhotoMode(!purePhotoActive);
+});
+window.addEventListener("blur", () => setPurePhotoMode(false));
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) setPurePhotoMode(false);
+});
+document.addEventListener("pointerleave", (event) => {
+  if (event.pointerType === "mouse") setPurePhotoMode(false);
+});
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Tab") setPurePhotoMode(false);
 });
 
 // Mantener el cursor sobre una flecha inicia una cuenta atrás circular.
@@ -824,7 +860,9 @@ function enterPhotograph() {
 featureEnter.addEventListener("click", enterPhotograph);
 
 window.addEventListener("keydown", (event) => {
-  if (!["ArrowLeft", "ArrowRight", "Escape"].includes(event.key)) return;
+  const key = event.key.toLowerCase();
+  if (!["arrowleft", "arrowright", "a", "d", "escape"].includes(key) ||
+      event.altKey || event.ctrlKey || event.metaKey) return;
   const focused = document.activeElement;
   if (focused?.matches("input, textarea, select") || focused?.isContentEditable)
     return;
@@ -837,8 +875,9 @@ window.addEventListener("keydown", (event) => {
     $("#menu-toggle").getAttribute("aria-expanded") === "true"
   )
     return;
-  if (event.key === "Escape") {
+  if (key === "escape") {
     event.preventDefault();
+    setPurePhotoMode(false);
     stopHoverAdvance();
     $("#archive-index").scrollIntoView({
       behavior: reduceMotion.matches ? "instant" : "smooth",
@@ -846,11 +885,11 @@ window.addEventListener("keydown", (event) => {
     });
     return;
   }
-  if (event.key === "ArrowLeft") {
+  if (key === "arrowleft" || key === "a") {
     event.preventDefault();
     stepPhoto(-1);
   }
-  if (event.key === "ArrowRight") {
+  if (key === "arrowright" || key === "d") {
     event.preventDefault();
     stepPhoto(1);
   }
@@ -979,14 +1018,15 @@ function updateGalleryScroll() {
     width: bigW,
     height: bigH,
   };
-  // El punto de llegada coincide con la portada central de la hilera de cinco.
-  const rowW = W * (mobile ? 0.26 : 0.175),
-    rowH = H * (mobile ? 0.155 : 0.215);
+  // Llegamos al botón REAL del índice: no existe una segunda hilera decorativa.
+  const indexCenter = $(".showcase-center");
+  const target = indexCenter.getBoundingClientRect();
+  const frame = $("#gallery-collage").getBoundingClientRect();
   const small = {
-    left: (W - rowW) / 2,
-    top: H * (mobile ? 0.51 : 0.5) - rowH / 2,
-    width: rowW,
-    height: rowH,
+    left: target.left - frame.left,
+    top: target.top - frame.top,
+    width: target.width,
+    height: target.height,
   };
   const active = {};
   for (const key of BOX_PROPERTIES) {
@@ -1010,13 +1050,16 @@ function updateGalleryScroll() {
   );
   sticky.style.setProperty("--u-controls-opacity", (1 - fade).toFixed(3));
   sticky.style.setProperty("--u-drop", `${(H * 0.05 * fade).toFixed(2)}px`);
-  sticky.style.setProperty(
-    "--handoff-opacity",
-    smoothstep(0.76, 0.93, galleryProgress).toFixed(3),
-  );
   sticky.classList.toggle("is-expanded", growth > 0.965 && shrink < 0.85);
   sticky.classList.toggle("is-gallery-retiring", fade > 0.02);
   sticky.classList.toggle("is-handoff", shrink > 0.25);
+  // Solo una imagen central se ve a cada lado del relevo, también al volver atrás.
+  const arrived = shrink >= 1;
+  sticky.classList.toggle("is-index-arrived", arrived);
+  $("#archive-index").classList.toggle("is-awaiting-photo", !arrived);
+  indexCenter.inert = !arrived;
+  if (!sticky.classList.contains("is-expanded") || fade > 0.02)
+    setPurePhotoMode(false);
   featureEnter.disabled = growth > 0.96 || shrink > 0.25;
   featureEnter.setAttribute(
     "aria-label",
@@ -1024,7 +1067,7 @@ function updateGalleryScroll() {
   );
   featured.style.pointerEvents = shrink > 0.75 ? "none" : "";
   featured.inert = shrink > 0.75;
-  featureControls.inert = fade > 0.02;
+  featureControls.inert = purePhotoActive || fade > 0.02;
 
   // Un mismo progreso hace crecer el centro y expulsa los laterales por los márgenes.
   const seeds = mobile ? SIDE_LAYOUTS.mobile : SIDE_LAYOUTS.desktop;

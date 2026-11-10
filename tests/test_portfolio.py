@@ -82,6 +82,138 @@ class PortfolioTests(unittest.TestCase):
         self.page.locator("#archive-index").scroll_into_view_if_needed()
         self.page.wait_for_timeout(100)
 
+    def test_closed_eye_and_tear_offer_an_unobstructed_photo(self):
+        self.gallery()
+        eye = self.page.locator("#toggle-overlay")
+        arrows = self.page.locator(".feature-controls .circle-button")
+        original_width = arrows.first.bounding_box()["width"]
+        eye.click()
+        self.assertEqual(eye.get_attribute("aria-pressed"), "true")
+        self.page.wait_for_function(
+            """() => ['.featured-titles', '#fullscreen-specs'].every(selector =>
+                Number(getComputedStyle(document.querySelector(selector)).opacity) < .01)"""
+        )
+        self.page.wait_for_function(
+            "getComputedStyle(document.querySelector('#toggle-overlay')).backgroundColor === 'rgba(0, 0, 0, 0)'"
+        )
+        self.assertEqual(eye.evaluate("el => getComputedStyle(el).backgroundColor"), "rgba(0, 0, 0, 0)")
+        self.assertEqual(eye.evaluate("el => getComputedStyle(el).backdropFilter"), "none")
+        self.page.wait_for_function(
+            """() => Number(getComputedStyle(document.querySelector('.eye-closed')).opacity) > .9 &&
+                Number(getComputedStyle(document.querySelector('.eye-open')).opacity) < .01"""
+        )
+        self.assertLess(arrows.first.bounding_box()["width"], original_width)
+        self.assertTrue(arrows.evaluate_all(
+            "buttons => buttons.every(el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)')"
+        ))
+        self.assertTrue(self.page.locator("#tear-trigger").is_visible())
+        self.page.locator("#tear-trigger").hover()
+        self.page.wait_for_function("document.body.classList.contains('photo-only')")
+        self.page.wait_for_timeout(400)
+        # Keeping the invisible droplet's hit area preserves hover without flicker.
+        self.assertIn("photo-only", self.page.locator("body").get_attribute("class"))
+        hidden = self.page.evaluate(
+            """() => ['#toggle-overlay', '.feature-controls', '.site-header', '.cursor-halo'].every(selector => {
+                let el = document.querySelector(selector), opacity = 1;
+                while (el) {
+                    const style = getComputedStyle(el);
+                    if (style.visibility === 'hidden' || style.display === 'none') return true;
+                    opacity *= Number(style.opacity);
+                    el = el.parentElement;
+                }
+                return opacity < .01;
+            })"""
+        )
+        self.assertTrue(hidden, "Only the photograph and its outside navigation hint should remain visible")
+        self.assertEqual(self.page.locator("#tear-trigger").evaluate("el => getComputedStyle(el).cursor"), "none")
+        hint = self.page.locator(".photo-navigation-hint")
+        self.assertEqual(hint.inner_text(), "Para navegar, usar flechas o las teclas A/D")
+        self.assertTrue(hint.is_visible())
+        photo = self.page.locator("#featured-image-full").bounding_box()
+        note = hint.bounding_box()
+        overlap = min(photo["x"] + photo["width"], note["x"] + note["width"]) - max(photo["x"], note["x"])
+        self.assertLessEqual(overlap, 1, "Navigation hint must stay beside the photograph")
+        source = self.page.locator("#featured-image").get_attribute("src")
+        self.page.keyboard.press("d")
+        self.assertNotEqual(self.page.locator("#featured-image").get_attribute("src"), source)
+        self.page.keyboard.press("A")
+        self.assertEqual(self.page.locator("#featured-image").get_attribute("src"), source)
+        self.page.mouse.move(5, 5)
+        self.page.wait_for_function("!document.body.classList.contains('photo-only')")
+        self.assertEqual(eye.get_attribute("aria-pressed"), "true")
+        eye.click()
+        self.assertEqual(eye.get_attribute("aria-pressed"), "false")
+        self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.featured-titles')).opacity) > .9")
+
+    def test_photo_only_mode_restores_controls_when_leaving_the_viewer(self):
+        self.gallery()
+        self.page.locator("#toggle-overlay").click()
+        tear = self.page.locator("#tear-trigger")
+        for exit_mode in ("Tab", "blur", "scroll", "Escape"):
+            with self.subTest(exit=exit_mode):
+                self.gallery()
+                self.page.mouse.move(5, 5)
+                tear.hover()
+                self.page.wait_for_function("document.body.classList.contains('photo-only')")
+                if exit_mode == "blur":
+                    self.page.evaluate("window.dispatchEvent(new Event('blur'))")
+                elif exit_mode == "scroll":
+                    self.gallery(.82)
+                else:
+                    self.page.keyboard.press(exit_mode)
+                self.page.wait_for_function("!document.body.classList.contains('photo-only')")
+                self.assertNotEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
+                self.assertEqual(self.page.locator("#toggle-overlay").get_attribute("aria-pressed"), "true")
+        self.page.wait_for_function("document.querySelector('#archive-index').getBoundingClientRect().top < innerHeight")
+
+    def test_photo_letter_navigation_ignores_inputs_and_shortcuts(self):
+        self.gallery()
+        source = self.page.locator("#featured-image").get_attribute("src")
+        self.page.keyboard.press("D")
+        self.assertNotEqual(self.page.locator("#featured-image").get_attribute("src"), source)
+        self.page.keyboard.press("a")
+        self.assertEqual(self.page.locator("#featured-image").get_attribute("src"), source)
+        self.page.keyboard.press("Control+ArrowRight")
+        self.assertEqual(self.page.locator("#featured-image").get_attribute("src"), source)
+        self.page.evaluate("""() => {
+            const input = document.createElement('input');
+            input.id = 'navigation-test-input';
+            input.style.cssText = 'position:fixed;top:100px;left:10px;z-index:999';
+            document.body.append(input);
+            input.focus();
+        }""")
+        self.page.keyboard.press("d")
+        self.page.keyboard.press("ArrowRight")
+        self.assertEqual(self.page.locator("#navigation-test-input").input_value(), "d")
+        self.assertEqual(self.page.locator("#featured-image").get_attribute("src"), source)
+
+    def test_touch_and_reduced_motion_can_use_the_closed_eye(self):
+        self.context.close()
+        self.context = self.browser.new_context(
+            viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True,
+            reduced_motion="reduce",
+        )
+        self.page = self.context.new_page()
+        self.page.on("pageerror", lambda error: self.errors.append(str(error)))
+        self.page.route("**/*", lambda route: route.continue_()
+                        if urlsplit(route.request.url).hostname == "127.0.0.1" else route.abort())
+        self.page.goto(self.base_url, wait_until="networkidle")
+        self.gallery()
+        eye = self.page.locator("#toggle-overlay")
+        eye.tap()
+        self.assertEqual(eye.get_attribute("aria-pressed"), "true")
+        tear = self.page.locator("#tear-trigger")
+        tear.tap()
+        self.page.wait_for_function("document.body.classList.contains('photo-only')")
+        tear.tap()
+        self.page.wait_for_function("!document.body.classList.contains('photo-only')")
+        before = self.page.locator("#featured-image").get_attribute("src")
+        self.page.locator("#next-photo").tap()
+        self.assertNotEqual(self.page.locator("#featured-image").get_attribute("src"), before)
+        eye.tap()
+        self.assertEqual(eye.get_attribute("aria-pressed"), "false")
+        self.assertEqual(self.page.evaluate("document.documentElement.scrollWidth"), 390)
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
@@ -224,6 +356,48 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(button.get_attribute("aria-expanded"), "false")
         self.assertTrue(button.evaluate("el => document.activeElement === el"))
         self.assertTrue(self.page.locator("#mobile-menu").evaluate("el => el.inert"))
+
+    def test_viewer_rejoins_the_real_collection_index(self):
+        self.gallery()
+        self.page.locator("#next-photo").click()
+        self.page.wait_for_function("document.querySelectorAll('.photo-slide-ghost').length === 0")
+        self.gallery(0.94)
+        center = self.page.locator(".showcase-center")
+        self.assertEqual(center.evaluate("el => getComputedStyle(el).visibility"), "hidden")
+        self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "1")
+        self.gallery(0.96)
+        alignment = self.page.evaluate("""() => {
+          const photo = document.querySelector('#featured').getBoundingClientRect();
+          const center = document.querySelector('.showcase-center').getBoundingClientRect();
+          return ['left', 'top', 'width', 'height'].map(key => Math.abs(photo[key] - center[key]));
+        }""")
+        self.assertLess(max(alignment), 0.1, "Viewer must meet the actual index card without jumping")
+        self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "0")
+        self.assertTrue(center.is_visible())
+        self.assertTrue(center.locator("img").get_attribute("src").endswith("DR-2.jpg"))
+        self.assertEqual(self.page.locator(".showcase-gallery").count(), 1)
+        self.assertEqual(self.page.locator(".handoff-preview").count(), 0)
+        center.click()
+        self.page.wait_for_function("Math.abs(galleryProgress - .44) < .002")
+        self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "1")
+        self.assertEqual(center.evaluate("el => getComputedStyle(el).visibility"), "hidden")
+
+    def test_index_handoff_on_mobile_and_with_reduced_motion(self):
+        for width in (390, 768):
+            for reduced in ("reduce", "no-preference"):
+                with self.subTest(width=width, reduced_motion=reduced):
+                    self.page.set_viewport_size({"width": width, "height": 844})
+                    self.page.emulate_media(reduced_motion=reduced)
+                    self.gallery(1)
+                    self.page.wait_for_function("getComputedStyle(document.querySelector('#featured')).opacity === '0'")
+                    self.assertTrue(self.page.locator(".showcase-center").is_visible())
+                    self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "0")
+                    self.assertTrue(self.page.locator("#featured").evaluate("el => el.inert"))
+                    self.assertLessEqual(self.page.evaluate("document.documentElement.scrollWidth"), width)
+                    self.gallery(0.44)
+                    self.page.wait_for_function("getComputedStyle(document.querySelector('#featured')).opacity === '1'")
+                    self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "1")
+                    self.assertEqual(self.page.locator(".showcase-center").evaluate("el => getComputedStyle(el).visibility"), "hidden")
 
 
 if __name__ == "__main__":
