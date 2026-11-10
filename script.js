@@ -856,15 +856,13 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-// Retrato: si el archivo no existe, mostramos una tarjeta tipográfica.
+// Retrato: si el archivo no existe, conservamos el fondo sin textos.
 const portrait = $(".portrait-card img");
 portrait.addEventListener("error", () => {
   portrait.classList.add("is-missing");
-  $(".portrait-fallback").classList.add("is-visible");
 });
 portrait.addEventListener("load", () => {
   portrait.classList.remove("is-missing");
-  $(".portrait-fallback").classList.remove("is-visible");
 });
 if (portrait.complete && !portrait.naturalWidth)
   portrait.dispatchEvent(new Event("error"));
@@ -1358,7 +1356,7 @@ const observer = new IntersectionObserver(
   { threshold: 0.08 },
 );
 $$(
-  ".intro-statement, .films-header, .film-card, .about-grid, .contact h2",
+  ".intro-statement, .film-card, .about-grid, .contact h2",
 ).forEach((el) => {
   el.classList.add("scroll-reveal");
   observer.observe(el);
