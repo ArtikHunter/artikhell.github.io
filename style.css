@@ -709,8 +709,10 @@ section { position: relative; }
 .gallery-instructions { left: 0px; right: 0px; justify-content: center; color: rgba(232, 223, 209, 0.68); letter-spacing: 0.16em; }
 .gallery-instructions span { border-top: 1px solid rgba(240, 235, 226, 0.12); padding-top: 7px; }
 .side-slot { will-change: transform, opacity; }
-.featured-image-wrap > #featured-image { position: absolute; opacity: calc(1 - var(--reveal-full,0)); transition: opacity 0.4s; }
-.featured-image-wrap > #featured-image-full { position: absolute; opacity: var(--reveal-full,0); transition: opacity 0.4s; pointer-events: none; }
+/* Una sola capa dibuja la foto durante todo el recorrido; la otra conserva
+   la precarga y el texto alternativo sin superponer otro encuadre. */
+.featured-image-wrap > #featured-image { position: absolute; opacity: 0 !important; pointer-events: none; }
+.featured-image-wrap > #featured-image-full { position: absolute; opacity: 1; transition: none !important; pointer-events: none; }
 .fullscreen-specs { z-index: 6; }
 
 /* Control para mostrar u ocultar los textos */
@@ -973,7 +975,7 @@ section { position: relative; }
 .featured { z-index: 5; overflow: hidden; border-radius: 4px; transition: none !important; }
 .featured-image-wrap { overflow: hidden; }
 .featured-image-wrap > #featured-image { object-fit: cover !important; }
-.featured-image-wrap > #featured-image-full { object-fit: contain !important; }
+.featured-image-wrap > #featured-image-full { object-fit: cover !important; }
 .gallery-sticky .featured-lower, .gallery-sticky.is-expanded .featured-lower {
   pointer-events: none;
   grid-template-columns: minmax(0px, 1fr) auto minmax(0px, 1fr);
@@ -1159,6 +1161,7 @@ section { position: relative; }
   right: clamp(18px, 2.2vw, 42px);
   width: clamp(46px, 3.55vw, 61px);
   height: clamp(46px, 3.55vw, 61px);
+  transition: opacity .32s ease-in-out;
 }
 .gallery-sticky.is-expanded:not(.is-gallery-retiring) .eye-control { display: block; }
 .eye-control .eye-toggle { inset: 0px; width: 100%; height: 100%; }
@@ -1226,6 +1229,12 @@ section { position: relative; }
 .gallery-sticky.is-text-hidden .circle-button:focus-visible { color: var(--paper); }
 .is-text-hidden .arrow-glyph { font-size: 16px; }
 .is-text-hidden .hold-ring { display: none; }
+.gallery-sticky.is-expanded:not(.is-gallery-retiring) .feature-controls {
+  transition: opacity .32s ease-in-out !important;
+}
+.gallery-instructions { transition: opacity .32s ease-in-out; }
+.site-header { transition: background .25s, opacity .32s ease-in-out; }
+.cursor-halo { transition: width .25s, height .25s, background .25s, opacity .32s ease-in-out; }
 .photo-navigation-hint {
   position: absolute;
   z-index: 10;
@@ -1233,14 +1242,15 @@ section { position: relative; }
   top: 50%;
   transform: translateY(-50%);
   writing-mode: vertical-rl;
-  font: 400 10px/1.4 var(--sans);
+  font: 400 clamp(13px, 1.1vw, 17px)/1.45 var(--sans);
   letter-spacing: .03em;
   color: var(--soft);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition: opacity .24s ease-in-out, visibility 0s .24s;
 }
-.is-photo-only .photo-navigation-hint { opacity: 1; visibility: visible; }
+.is-photo-only .photo-navigation-hint { opacity: 1; visibility: visible; transition-delay: 0s; }
 .gallery-sticky.is-photo-only .eye-control,
 .gallery-sticky.is-photo-only .feature-controls,
 .gallery-sticky.is-photo-only .gallery-instructions,
@@ -1251,6 +1261,13 @@ body.photo-only .site-header { pointer-events: none !important; }
 body.photo-only, body.photo-only * { cursor: none !important; }
 @media (max-width: 800px) {
   .eye-control { right: 13px; top: 13px; width: 43px; height: 43px; }
+  .photo-navigation-hint {
+    inset: auto 16px 16px;
+    transform: none;
+    writing-mode: horizontal-tb;
+    text-align: center;
+    font-size: 14px;
+  }
 }
 @media (max-width: 520px) {
   .eye-control { right: 10px; top: 10px; width: 42px; height: 42px; }
@@ -1258,4 +1275,9 @@ body.photo-only, body.photo-only * { cursor: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .eye-open, .eye-closed { transition: none; }
   .is-text-hidden .tear-line, .is-text-hidden .tear-drop { animation: none; }
+  .eye-control, .gallery-instructions, .site-header, .cursor-halo,
+  .photo-navigation-hint,
+  .gallery-sticky.is-expanded:not(.is-gallery-retiring) .feature-controls {
+    transition: none !important;
+  }
 }

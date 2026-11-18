@@ -2,6 +2,7 @@
 
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import base64
 import os
 from pathlib import Path
 import shutil
@@ -107,11 +108,23 @@ class PortfolioTests(unittest.TestCase):
             "buttons => buttons.every(el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)')"
         ))
         self.assertTrue(self.page.locator("#tear-trigger").is_visible())
+        normal_photo = self.page.locator("#featured").bounding_box()
         self.page.locator("#tear-trigger").hover()
         self.page.wait_for_function("document.body.classList.contains('photo-only')")
-        self.page.wait_for_timeout(400)
-        # Keeping the invisible droplet's hit area preserves hover without flicker.
+        # The controls fade while the photograph grows, without leaving the mode
+        # when the enlarged photograph moves the droplet away from the pointer.
+        self.page.wait_for_function("""() => {
+            const opacity = Number(getComputedStyle(document.querySelector('.site-header')).opacity);
+            return opacity > .05 && opacity < .95;
+        }""")
+        middle_photo = self.page.locator("#featured").bounding_box()
+        self.assertGreater(middle_photo["height"], normal_photo["height"])
+        self.page.wait_for_function("purePhotoBlend === 1")
+        self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.site-header')).opacity) < .01")
         self.assertIn("photo-only", self.page.locator("body").get_attribute("class"))
+        large_photo = self.page.locator("#featured").bounding_box()
+        self.assertGreater(large_photo["height"], normal_photo["height"] * 1.1)
+        self.assertLess(middle_photo["height"], large_photo["height"])
         hidden = self.page.evaluate(
             """() => ['#toggle-overlay', '.feature-controls', '.site-header', '.cursor-halo'].every(selector => {
                 let el = document.querySelector(selector), opacity = 1;
@@ -129,6 +142,7 @@ class PortfolioTests(unittest.TestCase):
         hint = self.page.locator(".photo-navigation-hint")
         self.assertEqual(hint.inner_text(), "Para navegar, usar flechas o las teclas A/D")
         self.assertTrue(hint.is_visible())
+        self.assertGreaterEqual(hint.evaluate("el => parseFloat(getComputedStyle(el).fontSize)"), 13)
         photo = self.page.locator("#featured-image-full").bounding_box()
         note = hint.bounding_box()
         overlap = min(photo["x"] + photo["width"], note["x"] + note["width"]) - max(photo["x"], note["x"])
@@ -138,8 +152,19 @@ class PortfolioTests(unittest.TestCase):
         self.assertNotEqual(self.page.locator("#featured-image").get_attribute("src"), source)
         self.page.keyboard.press("A")
         self.assertEqual(self.page.locator("#featured-image").get_attribute("src"), source)
-        self.page.mouse.move(5, 5)
+        # Even a one-pixel move restores the previous mode, wherever the drop is.
+        pointer = self.page.evaluate("purePhotoPointer")
+        self.page.mouse.move(pointer["x"] + 1, pointer["y"])
         self.page.wait_for_function("!document.body.classList.contains('photo-only')")
+        self.page.wait_for_function("""() => {
+            const opacity = Number(getComputedStyle(document.querySelector('.site-header')).opacity);
+            return opacity > .05 && opacity < .95;
+        }""")
+        self.page.wait_for_function("purePhotoBlend === 0")
+        self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.site-header')).opacity) > .99")
+        restored = self.page.locator("#featured").bounding_box()
+        self.assertAlmostEqual(restored["height"], normal_photo["height"], delta=1)
+        self.assertNotEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
         self.assertEqual(eye.get_attribute("aria-pressed"), "true")
         eye.click()
         self.assertEqual(eye.get_attribute("aria-pressed"), "false")
@@ -381,6 +406,91 @@ class PortfolioTests(unittest.TestCase):
         self.page.wait_for_function("Math.abs(galleryProgress - .44) < .002")
         self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "1")
         self.assertEqual(center.evaluate("el => getComputedStyle(el).visibility"), "hidden")
+
+    def assert_single_photo_pixels(self):
+        screenshot = base64.b64encode(self.page.screenshot()).decode()
+        difference = self.page.evaluate("""async encoded => {
+            const shot = new Image();
+            shot.src = 'data:image/png;base64,' + encoded;
+            await shot.decode();
+            const actual = document.createElement('canvas');
+            actual.width = innerWidth; actual.height = innerHeight;
+            const observed = actual.getContext('2d');
+            observed.drawImage(shot, 0, 0);
+            const photo = document.querySelector('#featured-image-full');
+            const box = photo.getBoundingClientRect();
+            const expected = document.createElement('canvas');
+            expected.width = innerWidth; expected.height = innerHeight;
+            const reference = expected.getContext('2d');
+            const scale = Math.max(box.width / photo.naturalWidth, box.height / photo.naturalHeight);
+            const width = photo.naturalWidth * scale, height = photo.naturalHeight * scale;
+            reference.drawImage(photo, box.left + (box.width - width)/2,
+                box.top + (box.height - height)/2, width, height);
+            let total = 0, samples = 0;
+            for (const u of [.12, .26, .4, .55, .69, .84]) {
+                for (const v of [.13, .29, .47, .65, .83]) {
+                    const x = Math.floor(box.left + box.width * u);
+                    const y = Math.floor(box.top + box.height * v);
+                    if (x < 1 || y < 1 || x >= innerWidth-1 || y >= innerHeight-1) continue;
+                    const a = observed.getImageData(x, y, 1, 1).data;
+                    const b = reference.getImageData(x, y, 1, 1).data;
+                    total += Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[2]-b[2]);
+                    samples += 3;
+                }
+            }
+            return { samples, mean: total / Math.max(1, samples) };
+        }""", screenshot)
+        self.assertGreater(difference["samples"], 12)
+        self.assertLess(difference["mean"], 3, "Visible pixels must match one cover image without a second framing")
+
+    def test_scroll_draws_one_photo_through_growth_and_return(self):
+        # A high-contrast pattern makes two superposed scales visibly different.
+        pattern = self.page.evaluate("""() => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 600; canvas.height = 400;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#17456b'; context.fillRect(0, 0, 600, 400);
+            context.fillStyle = '#e38c2c';
+            for (let x = 0; x < 600; x += 150) context.fillRect(x, 0, 75, 400);
+            context.fillStyle = '#eeeeee'; context.beginPath();
+            context.arc(300, 200, 96, 0, Math.PI*2); context.fill();
+            context.strokeStyle = '#8b2034'; context.lineWidth = 28;
+            context.beginPath(); context.moveTo(0, 70); context.lineTo(600, 330);
+            context.moveTo(0, 330); context.lineTo(600, 70); context.stroke();
+            return canvas.toDataURL('image/png').split(',')[1];
+        }""")
+        self.page.route("**/DR-1.jpg", lambda route: route.fulfill(
+            status=200, content_type="image/png", body=base64.b64decode(pattern)))
+        self.page.reload(wait_until="networkidle")
+        self.page.add_style_tag(content="""
+            .featured-lower, .eye-control, .fullscreen-specs, .gallery-instructions,
+            .site-header, #archive-index { visibility:hidden !important; }
+        """)
+        for width, height in ((1440, 900), (390, 844)):
+            self.page.set_viewport_size({"width": width, "height": height})
+            for progress in (.08, .16, .24, .44, .76, .84, .91, .84, .24, .08):
+                with self.subTest(width=width, progress=progress):
+                    self.gallery(progress)
+                    self.assert_single_photo_pixels()
+            self.gallery(.44)
+            aspect = self.page.locator("#featured-image-full").evaluate(
+                "el => ({ rendered:el.getBoundingClientRect().width/el.getBoundingClientRect().height, natural:el.naturalWidth/el.naturalHeight })")
+            self.assertAlmostEqual(aspect["rendered"], aspect["natural"], delta=.002)
+
+    def test_scrolling_during_photo_slide_removes_the_outgoing_layer(self):
+        self.gallery()
+        self.page.locator("#next-photo").click()
+        self.assertEqual(self.page.locator(".photo-slide-ghost").count(), 1)
+        source = self.page.locator("#featured-image-full").get_attribute("src")
+        self.gallery(.2)
+        self.assertEqual(self.page.locator(".photo-slide-ghost").count(), 0)
+        self.assertEqual(self.page.locator("#featured-image-full").evaluate("el => el.getAnimations().length"), 0)
+        self.assertEqual(self.page.locator("#featured-image-full").get_attribute("src"), source)
+        self.page.add_style_tag(content="""
+            .featured-lower, .eye-control, .fullscreen-specs, .gallery-instructions,
+            .site-header, #archive-index { visibility:hidden !important; }
+        """)
+        self.assert_single_photo_pixels()
 
     def test_index_handoff_on_mobile_and_with_reduced_motion(self):
         for width in (390, 768):

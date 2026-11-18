@@ -9,6 +9,8 @@ const GALLERY_VIEW_PROGRESS = 0.44;
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 let serieActual = 0;
 let fotoActual = 0;
+// Volver a una colección retoma la foto explorada durante esta visita.
+const collectionProgress = new Map();
 let galleryAnimationFrame = 0;
 
 const featured = $("#featured");
@@ -41,9 +43,15 @@ function mainPhoto() {
   return colecciones[serieActual].fotos[fotoActual];
 }
 
+function rememberedPhotoIndex(collectionIndex) {
+  const photos = colecciones[collectionIndex].fotos;
+  return clamp(collectionProgress.get(collectionIndex) ?? 0, 0, photos.length - 1);
+}
+
 function showPhoto({ animate = true, refreshSideSlots = true } = {}) {
   const serie = colecciones[serieActual];
   const foto = mainPhoto();
+  collectionProgress.set(serieActual, fotoActual);
   clearTimeout(photoChangeTimer);
   featured.classList.remove("is-changing");
   if (animate && !reduceMotion.matches) {
@@ -68,14 +76,14 @@ function showPhoto({ animate = true, refreshSideSlots = true } = {}) {
 
 function selectPhoto(
   collectionIndex,
-  imageIndex = 0,
+  imageIndex,
   { preserveSides = false, syncShowcase = true } = {},
 ) {
   if (!colecciones[collectionIndex]?.fotos.length) return;
   cancelPhotoSlide();
   serieActual = collectionIndex;
   fotoActual = clamp(
-    imageIndex,
+    imageIndex ?? rememberedPhotoIndex(collectionIndex),
     0,
     colecciones[collectionIndex].fotos.length - 1,
   );
@@ -84,17 +92,24 @@ function selectPhoto(
 }
 
 let currentSlideAnimations = [];
+let lastPhotoSlideViewport = "";
 function cancelPhotoSlide() {
   currentSlideAnimations.forEach((animation) => animation.cancel());
   currentSlideAnimations = [];
   $(".photo-slide-ghost")?.remove();
 }
 
+function cancelPhotoSlideOnScroll(progress, width, height) {
+  const viewport = `${progress}:${width}:${height}:${reduceMotion.matches}`;
+  if (lastPhotoSlideViewport && viewport !== lastPhotoSlideViewport)
+    cancelPhotoSlide();
+  lastPhotoSlideViewport = viewport;
+}
+
 function stepPhoto(step) {
   const count = colecciones[serieActual].fotos.length;
   const direction = Math.sign(step) || 1;
-  const expanded = sticky.classList.contains("is-expanded");
-  const incomingLayer = expanded ? featuredImageFull : featuredImage;
+  const incomingLayer = featuredImageFull;
   const outgoingPath = incomingLayer.currentSrc || incomingLayer.src;
   cancelPhotoSlide();
   let ghost = null;
@@ -103,7 +118,7 @@ function stepPhoto(step) {
     ghost.className = "photo-slide-ghost";
     ghost.src = outgoingPath;
     ghost.alt = "";
-    ghost.style.objectFit = expanded ? "contain" : "cover";
+    ghost.style.objectFit = "cover";
     $(".featured-image-wrap").append(ghost);
   }
   fotoActual = (fotoActual + step + count) % count;
@@ -249,6 +264,8 @@ function runShowcaseTransition(
     if (completed) return;
     completed = true;
     clearTimeout(timer);
+    window.removeEventListener("resize", finishForLayoutChange);
+    reduceMotion.removeEventListener("change", finishForLayoutChange);
     animations.forEach((animation) => animation.cancel());
     ghosts.forEach((ghost) => ghost.remove());
     hiddenCards.forEach((card) => card.classList.remove("is-switching"));
@@ -256,7 +273,10 @@ function runShowcaseTransition(
     cancelShowcaseAnimation = null;
     if (!cancelled) finish();
   };
+  const finishForLayoutChange = () => complete();
   cancelShowcaseAnimation = () => complete(true);
+  window.addEventListener("resize", finishForLayoutChange);
+  reduceMotion.addEventListener("change", finishForLayoutChange);
   Promise.allSettled(animations.map((animation) => animation.finished)).then(
     () => complete(),
   );
@@ -284,13 +304,13 @@ function pageIndices() {
     archivePage * PAGE_SIZE + PAGE_SIZE,
   );
 }
-function createPreviewImage(collectionIndex, isCenter = false) {
+function createPreviewImage(collectionIndex) {
   const collection = colecciones[collectionIndex];
   const img = document.createElement("img");
   img.alt = "";
   img.loading = "lazy";
   img.decoding = "async";
-  img.src = isCenter ? mainPhoto().archivo : collection.fotos[0].archivo;
+  img.src = collection.fotos[rememberedPhotoIndex(collectionIndex)].archivo;
   return img;
 }
 function populatePreview(button, collectionIndex, isCenter) {
@@ -304,7 +324,7 @@ function populatePreview(button, collectionIndex, isCenter) {
   button.hidden = false;
   button.disabled = false;
   button.dataset.collection = String(collectionIndex);
-  button.append(createPreviewImage(collectionIndex, isCenter));
+  button.append(createPreviewImage(collectionIndex));
   button.setAttribute(
     "aria-label",
     isCenter
@@ -352,7 +372,7 @@ function renderYearFilters() {
       const eligible = filteredIndices();
       if (eligible.length && !eligible.includes(serieActual)) {
         // Un filtro de año debe reflejarse también en la portada central.
-        selectPhoto(eligible[0], 0, { syncShowcase: false });
+        selectPhoto(eligible[0], undefined, { syncShowcase: false });
       }
       renderArchivePage();
     });
@@ -383,10 +403,12 @@ function animateShowcaseChoice(collectionIndex) {
   );
   const cards = $$(".showcase-card");
   const center = cards[2];
+  clearTimeout(showcasePulseTimer);
+  center.classList.remove("is-pulsing");
   const oldIndex = serieActual;
   const oldCenterImage = center.querySelector("img");
   const finish = () => {
-    selectPhoto(collectionIndex, 0, {
+    selectPhoto(collectionIndex, undefined, {
       preserveSides: false,
       syncShowcase: false,
     });
@@ -413,8 +435,9 @@ function animateShowcaseChoice(collectionIndex) {
       ghost.className = "showcase-ghost";
       ghost.style.zIndex = String(z);
       Object.assign(ghost.style, {
-        left: `${rect.left}px`,
-        top: `${rect.top}px`,
+        position: "absolute",
+        left: `${rect.left + scrollX}px`,
+        top: `${rect.top + scrollY}px`,
         width: `${rect.width}px`,
         height: `${rect.height}px`,
       });
@@ -432,7 +455,7 @@ function animateShowcaseChoice(collectionIndex) {
     );
     const ghostB = makeGhost(
       side.querySelector("img")?.src ||
-        colecciones[collectionIndex].fotos[0].archivo,
+        colecciones[collectionIndex].fotos[rememberedPhotoIndex(collectionIndex)].archivo,
       rectB,
       241,
     );
@@ -440,14 +463,14 @@ function animateShowcaseChoice(collectionIndex) {
     side.classList.add("is-switching");
     const frames = (from, to) => [
       {
-        left: `${from.left}px`,
-        top: `${from.top}px`,
+        left: `${from.left + scrollX}px`,
+        top: `${from.top + scrollY}px`,
         width: `${from.width}px`,
         height: `${from.height}px`,
       },
       {
-        left: `${to.left}px`,
-        top: `${to.top}px`,
+        left: `${to.left + scrollX}px`,
+        top: `${to.top + scrollY}px`,
         width: `${to.width}px`,
         height: `${to.height}px`,
       },
@@ -478,8 +501,9 @@ function animateShowcaseChoice(collectionIndex) {
     const ghost = document.createElement("div");
     ghost.className = "showcase-ghost";
     Object.assign(ghost.style, {
-      left: `${rect.left}px`,
-      top: `${rect.top}px`,
+      position: "absolute",
+      left: `${rect.left + scrollX}px`,
+      top: `${rect.top + scrollY}px`,
       width: `${rect.width}px`,
       height: `${rect.height}px`,
     });
@@ -489,7 +513,7 @@ function animateShowcaseChoice(collectionIndex) {
     ghost.append(img);
     document.body.append(ghost);
     center.classList.add("is-switching");
-    selectPhoto(collectionIndex, 0, {
+    selectPhoto(collectionIndex, undefined, {
       preserveSides: false,
       syncShowcase: false,
     });
@@ -736,6 +760,26 @@ function updateFullscreenSpecs() {
 
 let overlayHidden = false;
 let purePhotoActive = false;
+let purePhotoBlend = 0;
+let purePhotoFrame = 0;
+let purePhotoPointer = null;
+let tearArmed = true;
+const PHOTO_MODE_DURATION = 320;
+function animatePurePhotoMode() {
+  cancelAnimationFrame(purePhotoFrame);
+  const from = purePhotoBlend;
+  const to = purePhotoActive ? 1 : 0;
+  const started = performance.now();
+  const duration = reduceMotion.matches ? 0 : PHOTO_MODE_DURATION;
+  const tick = (now) => {
+    const progress = duration ? clamp((now - started) / duration, 0, 1) : 1;
+    const eased = progress * progress * (3 - 2 * progress);
+    purePhotoBlend = lerp(from, to, eased);
+    purePhotoFrame = progress < 1 ? requestAnimationFrame(tick) : 0;
+    updateGalleryScroll();
+  };
+  purePhotoFrame = requestAnimationFrame(tick);
+}
 function setPurePhotoMode(active) {
   active = Boolean(
     active && overlayHidden && sticky.classList.contains("is-expanded") &&
@@ -743,6 +787,7 @@ function setPurePhotoMode(active) {
   );
   if (active === purePhotoActive) return;
   purePhotoActive = active;
+  if (!active) purePhotoPointer = null;
   stopHoverAdvance();
   sticky.classList.toggle("is-photo-only", active);
   document.body.classList.toggle("photo-only", active);
@@ -753,6 +798,7 @@ function setPurePhotoMode(active) {
   overlayToggle.inert = active;
   siteHeader.inert = active;
   featureControls.inert = active || sticky.classList.contains("is-gallery-retiring");
+  animatePurePhotoMode();
 }
 function syncOverlayToggle() {
   if (!overlayToggle) return;
@@ -772,11 +818,20 @@ overlayToggle?.addEventListener("click", () => {
   stopHoverAdvance();
   syncOverlayToggle();
 });
-tearTrigger.addEventListener("pointerenter", (event) => {
-  if (event.pointerType === "mouse") setPurePhotoMode(true);
+tearTrigger.addEventListener("pointermove", (event) => {
+  if (event.pointerType === "mouse" && !purePhotoActive && tearArmed) {
+    purePhotoPointer = { x: event.clientX, y: event.clientY };
+    setPurePhotoMode(true);
+  }
 });
-tearTrigger.addEventListener("pointerleave", (event) => {
-  if (event.pointerType === "mouse") setPurePhotoMode(false);
+document.addEventListener("pointermove", (event) => {
+  if (event.pointerType !== "mouse") return;
+  if (purePhotoActive && (!purePhotoPointer ||
+      event.clientX !== purePhotoPointer.x || event.clientY !== purePhotoPointer.y)) {
+    tearArmed = false;
+    setPurePhotoMode(false);
+  }
+  if (!tearTrigger.contains(event.target)) tearArmed = true;
 });
 // Enter/Espacio y pantallas táctiles permiten alternar sin depender del hover.
 tearTrigger.addEventListener("click", (event) => {
@@ -987,7 +1042,8 @@ function updateGalleryScroll() {
   const bounds = sticky.getBoundingClientRect();
   const W = bounds.width,
     H = bounds.height;
-  const layoutKey = `${W}:${H}:${galleryProgress}:${currentPhotoAspect}:${reduceMotion.matches}`;
+  cancelPhotoSlideOnScroll(galleryProgress, W, H);
+  const layoutKey = `${W}:${H}:${galleryProgress}:${currentPhotoAspect}:${reduceMotion.matches}:${purePhotoBlend}`;
   if (layoutKey === lastGalleryLayout) return;
   lastGalleryLayout = layoutKey;
   const mobile = W < 801;
@@ -1018,6 +1074,19 @@ function updateGalleryScroll() {
     width: bigW,
     height: bigH,
   };
+  // Reservamos un margen para la ayuda; la foto mantiene su proporción íntegra.
+  const pureMaxW = mobile ? W - 24 : W - 96;
+  const pureMaxH = mobile ? H - 68 : H - 28;
+  const pureW = Math.min(pureMaxW, pureMaxH * aspect);
+  const pureH = pureW / aspect;
+  const pure = {
+    left: (W - pureW) / 2,
+    top: mobile ? 12 + (pureMaxH - pureH) / 2 : (H - pureH) / 2,
+    width: pureW,
+    height: pureH,
+  };
+  for (const key of BOX_PROPERTIES)
+    expanded[key] = lerp(expanded[key], pure[key], purePhotoBlend);
   // Llegamos al botón REAL del índice: no existe una segunda hilera decorativa.
   const indexCenter = $(".showcase-center");
   const target = indexCenter.getBoundingClientRect();
@@ -1038,11 +1107,6 @@ function updateGalleryScroll() {
     width: `${active.width.toFixed(2)}px`,
     height: `${active.height.toFixed(2)}px`,
   });
-  // En el estado ampliado nunca quedan barras artificiales; contain es íntegro.
-  featured.style.setProperty(
-    "--reveal-full",
-    (growth * (1 - shrink)).toFixed(3),
-  );
   featured.classList.toggle("is-compact-photo", mobile && active.height < 330);
   sticky.style.setProperty(
     "--fullscreen-info-opacity",
