@@ -764,7 +764,13 @@ let purePhotoBlend = 0;
 let purePhotoFrame = 0;
 let purePhotoPointer = null;
 let tearArmed = true;
+let tearHoverTimer = 0;
+const TEAR_REST_DURATION = 160;
 const PHOTO_MODE_DURATION = 320;
+function cancelTearHover() {
+  clearTimeout(tearHoverTimer);
+  tearHoverTimer = 0;
+}
 function animatePurePhotoMode() {
   cancelAnimationFrame(purePhotoFrame);
   const from = purePhotoBlend;
@@ -781,13 +787,17 @@ function animatePurePhotoMode() {
   purePhotoFrame = requestAnimationFrame(tick);
 }
 function setPurePhotoMode(active) {
+  cancelTearHover();
   active = Boolean(
     active && overlayHidden && sticky.classList.contains("is-expanded") &&
     !sticky.classList.contains("is-gallery-retiring"),
   );
   if (active === purePhotoActive) return;
   purePhotoActive = active;
-  if (!active) purePhotoPointer = null;
+  if (!active) {
+    purePhotoPointer = null;
+    tearArmed = false;
+  }
   stopHoverAdvance();
   sticky.classList.toggle("is-photo-only", active);
   document.body.classList.toggle("photo-only", active);
@@ -818,20 +828,34 @@ overlayToggle?.addEventListener("click", () => {
   stopHoverAdvance();
   syncOverlayToggle();
 });
-tearTrigger.addEventListener("pointermove", (event) => {
-  if (event.pointerType === "mouse" && !purePhotoActive && tearArmed) {
-    purePhotoPointer = { x: event.clientX, y: event.clientY };
+function waitOnTear(event) {
+  if (event.pointerType !== "mouse" || purePhotoActive || !tearArmed) return;
+  cancelTearHover();
+  const pointer = { x: event.clientX, y: event.clientY };
+  // La entrada incluye varios movimientos: activar sólo al reposar evita
+  // cancelar el efecto antes de que el puntero alcance el centro de la gota.
+  tearHoverTimer = setTimeout(() => {
+    tearHoverTimer = 0;
+    if (document.hidden || tearTrigger.disabled || !tearTrigger.matches(":hover")) return;
+    purePhotoPointer = pointer;
     setPurePhotoMode(true);
-  }
-});
+  }, TEAR_REST_DURATION);
+}
+tearTrigger.addEventListener("pointerenter", waitOnTear);
+tearTrigger.addEventListener("pointermove", waitOnTear);
+tearTrigger.addEventListener("pointerleave", cancelTearHover);
 document.addEventListener("pointermove", (event) => {
   if (event.pointerType !== "mouse") return;
   if (purePhotoActive && (!purePhotoPointer ||
       event.clientX !== purePhotoPointer.x || event.clientY !== purePhotoPointer.y)) {
     tearArmed = false;
     setPurePhotoMode(false);
+    return;
   }
-  if (!tearTrigger.contains(event.target)) tearArmed = true;
+  if (!tearTrigger.contains(event.target)) {
+    tearArmed = true;
+    cancelTearHover();
+  }
 });
 // Enter/Espacio y pantallas táctiles permiten alternar sin depender del hover.
 tearTrigger.addEventListener("click", (event) => {

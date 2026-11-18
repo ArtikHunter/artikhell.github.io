@@ -235,6 +235,13 @@ class PortfolioTests(unittest.TestCase):
         before = self.page.locator("#featured-image").get_attribute("src")
         self.page.locator("#next-photo").tap()
         self.assertNotEqual(self.page.locator("#featured-image").get_attribute("src"), before)
+        # Wait for the next photograph's framing before tapping its moving eye.
+        self.page.wait_for_function("""() => {
+            const image = document.querySelector('#featured-image-full');
+            const box = image.getBoundingClientRect();
+            return image.complete && image.naturalWidth > 0 &&
+                Math.abs(box.width / box.height - image.naturalWidth / image.naturalHeight) < .002;
+        }""")
         eye.tap()
         self.assertEqual(eye.get_attribute("aria-pressed"), "false")
         self.assertEqual(self.page.evaluate("document.documentElement.scrollWidth"), 390)
@@ -508,6 +515,66 @@ class PortfolioTests(unittest.TestCase):
                     self.page.wait_for_function("getComputedStyle(document.querySelector('#featured')).opacity === '1'")
                     self.assertEqual(self.page.locator("#featured").evaluate("el => getComputedStyle(el).opacity"), "1")
                     self.assertEqual(self.page.locator(".showcase-center").evaluate("el => getComputedStyle(el).visibility"), "hidden")
+
+    def test_tear_activates_after_a_continuous_mouse_approach_and_reentry(self):
+        self.gallery()
+        eye = self.page.locator("#toggle-overlay")
+        eye.click()
+        for attempt in range(2):
+            with self.subTest(attempt=attempt):
+                self.page.wait_for_function("purePhotoBlend === 0", timeout=1500)
+                normal = self.page.locator("#featured").bounding_box()
+                start = eye.bounding_box()
+                drop = self.page.locator("#tear-trigger").bounding_box()
+                start_x = start["x"] + start["width"] / 2
+                start_y = start["y"] + start["height"] / 2
+                end_x = drop["x"] + drop["width"] / 2
+                end_y = drop["y"] + drop["height"] / 2
+                self.page.mouse.move(start_x, start_y)
+                # A person travels through the droplet's hit area before resting;
+                # teleporting with locator.hover() used to hide the entry bug.
+                for step in range(1, 21):
+                    self.page.mouse.move(
+                        start_x + (end_x - start_x) * step / 20,
+                        start_y + (end_y - start_y) * step / 20,
+                    )
+                    self.page.wait_for_timeout(12)
+                self.page.wait_for_function("purePhotoActive && purePhotoBlend === 1", timeout=1500)
+                self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.site-header')).opacity) < .01", timeout=1500)
+                self.assertGreater(self.page.locator("#featured").bounding_box()["height"], normal["height"] * 1.1)
+                self.assertEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
+                self.page.wait_for_timeout(200)
+                self.assertTrue(self.page.evaluate("purePhotoActive"), "Resting must preserve the enlarged photograph")
+                self.page.mouse.move(end_x + 1, end_y)
+                self.page.wait_for_function("!purePhotoActive && purePhotoBlend === 0", timeout=1500)
+                self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.site-header')).opacity) > .99", timeout=1500)
+                self.assertEqual(eye.get_attribute("aria-pressed"), "true")
+                self.assertNotEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
+                self.page.wait_for_timeout(200)
+                self.assertFalse(self.page.evaluate("purePhotoActive"), "A movement must exit without immediately reopening")
+
+    def test_closed_eye_arrows_are_clear_and_still_navigate(self):
+        self.gallery()
+        self.page.locator("#toggle-overlay").click()
+        arrow = self.page.locator("#next-photo")
+        dimensions = arrow.evaluate("""el => ({
+            hit: el.getBoundingClientRect().width,
+            circle: parseFloat(getComputedStyle(el, '::before').width),
+            glyph: parseFloat(getComputedStyle(el.querySelector('.arrow-glyph')).fontSize)
+        })""")
+        self.assertGreaterEqual(dimensions["hit"], 44)
+        self.assertGreaterEqual(dimensions["circle"], 32)
+        self.assertLess(dimensions["circle"], dimensions["hit"])
+        self.assertGreaterEqual(dimensions["glyph"], 20)
+        arrow.hover()
+        self.page.wait_for_function("""width =>
+            document.querySelector('#next-photo').getBoundingClientRect().width > width * 1.08
+        """, arg=dimensions["hit"])
+        before = self.page.locator("#featured-image-full").get_attribute("src")
+        arrow.click()
+        self.assertNotEqual(self.page.locator("#featured-image-full").get_attribute("src"), before)
+        self.page.locator("#prev-photo").click()
+        self.assertEqual(self.page.locator("#featured-image-full").get_attribute("src"), before)
 
 
 if __name__ == "__main__":
