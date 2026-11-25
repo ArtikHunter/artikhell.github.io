@@ -367,6 +367,29 @@ class PortfolioTests(unittest.TestCase):
                 self.assertTrue(elemento.is_visible())
                 self.assertEqual(elemento.evaluate("el => getComputedStyle(el).opacity"), "1")
 
+    def test_ink_darkens_down_the_page(self):
+        valores = self.page.evaluate("""() => [
+            tintaPara({intro: 1, galeria: 0, cineTop: 5000, alto: 900}),
+            tintaPara({intro: 1, galeria: 0.44, cineTop: 5000, alto: 900}),
+            tintaPara({intro: 1, galeria: 1, cineTop: 5000, alto: 900}),
+            tintaPara({intro: 1, galeria: 1, cineTop: 0, alto: 900}),
+        ]""")
+        for obtenido, esperado in zip(valores, (0.35, 0.62, 0.82, 1.0)):
+            self.assertAlmostEqual(obtenido, esperado, places=2)
+        self.assertEqual(valores, sorted(valores))
+
+    def test_liquid_falls_back_without_webgl(self):
+        self.page.add_init_script("""(() => {
+            const original = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function (tipo, ...resto) {
+                return /webgl/i.test(tipo) ? null : original.call(this, tipo, ...resto);
+            };
+        })()""")
+        self.page.reload(wait_until="networkidle")
+        self.esperar_carga()
+        self.assertTrue(self.page.evaluate("document.documentElement.classList.contains('sin-webgl')"))
+        self.assertIn("liquido.jpg", self.page.locator("#liquido").evaluate("el => getComputedStyle(el).backgroundImage"))
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
