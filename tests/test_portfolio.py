@@ -95,6 +95,12 @@ class PortfolioTests(unittest.TestCase):
                 if intento == 3:
                     raise
 
+    def assert_cursor_restaurado(self):
+        """Con el cursor fósforo activo, «volver» es que la mira se vea; si no, el del sistema."""
+        self.page.wait_for_function("""() => document.documentElement.classList.contains('cursor-activo')
+            ? Number(getComputedStyle(document.querySelector('.cursor-mira')).opacity) > .5
+            : getComputedStyle(document.body).cursor !== 'none'""")
+
     def nuevo_contexto(self, **opciones):
         self.context.close()
         self.context = self.browser.new_context(**{"viewport": {"width": 1440, "height": 900}, **opciones})
@@ -198,7 +204,7 @@ class PortfolioTests(unittest.TestCase):
         self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.site-header')).opacity) > .99")
         restored = self.page.locator("#featured").bounding_box()
         self.assertAlmostEqual(restored["height"], normal_photo["height"], delta=1)
-        self.assertNotEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
+        self.assert_cursor_restaurado()
         self.assertEqual(eye.get_attribute("aria-pressed"), "true")
         eye.click()
         self.assertEqual(eye.get_attribute("aria-pressed"), "false")
@@ -224,7 +230,7 @@ class PortfolioTests(unittest.TestCase):
                 else:
                     self.page.keyboard.press(exit_mode)
                 self.page.wait_for_function("!document.body.classList.contains('photo-only')")
-                self.assertNotEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
+                self.assert_cursor_restaurado()
                 self.assertEqual(self.page.locator("#toggle-overlay").get_attribute("aria-pressed"), "true")
         self.page.wait_for_function("document.querySelector('#archive-index').getBoundingClientRect().top < innerHeight")
 
@@ -534,6 +540,27 @@ class PortfolioTests(unittest.TestCase):
         self.page.evaluate(mover, 0.2)
         self.page.wait_for_function(f"{luz} === '1'")
 
+    def test_pointer_animation_stops_when_idle(self):
+        self.page.mouse.move(720, 400)
+        self.page.mouse.move(760, 430)
+        self.page.wait_for_function("document.querySelector('.cursor-mira').classList.contains('is-visible')")
+        self.page.wait_for_function("cursorFrame === 0", timeout=5000)
+        self.assertNotEqual(self.page.locator(".cursor-mira").evaluate("el => getComputedStyle(el).transform"), "none")
+
+    def test_cursor_states_and_preferences(self):
+        self.assertTrue(self.page.evaluate("document.documentElement.classList.contains('cursor-activo')"))
+        self.gallery(0.02)
+        caja = self.page.locator(".side-image").first.bounding_box()
+        self.page.mouse.move(caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
+        self.page.wait_for_function("document.querySelector('.cursor-mira').dataset.estado === 'foto'")
+        for nombre, opciones in (
+            ("movimiento reducido", {"reduced_motion": "reduce"}),
+            ("táctil", {"has_touch": True, "is_mobile": True, "viewport": {"width": 390, "height": 844}}),
+        ):
+            with self.subTest(contexto=nombre):
+                self.nuevo_contexto(**opciones)
+                self.assertFalse(self.page.evaluate("document.documentElement.classList.contains('cursor-activo')"))
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
@@ -815,7 +842,7 @@ class PortfolioTests(unittest.TestCase):
                 self.page.wait_for_function("!purePhotoActive && purePhotoBlend === 0", timeout=1500)
                 self.page.wait_for_function("Number(getComputedStyle(document.querySelector('.site-header')).opacity) > .99", timeout=1500)
                 self.assertEqual(eye.get_attribute("aria-pressed"), "true")
-                self.assertNotEqual(self.page.locator("body").evaluate("el => getComputedStyle(el).cursor"), "none")
+                self.assert_cursor_restaurado()
                 self.page.wait_for_timeout(200)
                 self.assertFalse(self.page.evaluate("purePhotoActive"), "A movement must exit without immediately reopening")
 
