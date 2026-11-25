@@ -1164,3 +1164,74 @@ main, .pie { position: relative; z-index: 1; }
 @media (max-width: 800px) {
   .cine-peliculas { grid-template-columns: 1fr; }
 }
+
+/* ================= Trayectoria: guía de programación ================= */
+.trayectoria-filtros { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 34px; }
+.filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px 9px 11px;
+  border: 1px solid rgba(239, 230, 210, .22);
+  border-radius: 30px;
+  background: transparent;
+  color: #d9cfbc;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.filtro i { width: 12px; height: 12px; border-radius: 50%; background: var(--color); }
+.filtro[aria-pressed="true"] { background: var(--crema); color: var(--negro); border-color: var(--crema); }
+.trayectoria-guia { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid rgba(239, 230, 210, .15); }
+.entrada { border-top: 1px solid rgba(239, 230, 210, .15); }
+.fila {
+  display: grid;
+  grid-template-columns: 110px 200px minmax(0, 1fr) 260px 40px;
+  align-items: center;
+  width: 100%;
+  min-height: 78px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--crema);
+  text-align: left;
+}
+.fila:hover, .fila[aria-expanded="true"] { background: rgba(239, 230, 210, .045); }
+.fila-anio { font: 500 14px/1 var(--mono); color: #8c8278; padding-left: 4px; }
+.fila-rol { justify-self: start; padding: 7px 9px; border-radius: 4px; background: var(--color); color: #fff; font: 600 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.fila-titulo { font: 800 clamp(22px, 2.4vw, 34px)/1.05 var(--sans); text-transform: uppercase; padding-right: 20px; }
+.fila-tipo { font: 500 12px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: #a89e8f; }
+.fila-signo { font: 400 28px/1 var(--mono); color: #8c8278; text-align: right; padding-right: 6px; }
+.detalle { display: grid; grid-template-columns: 110px minmax(0, 1fr); padding: 14px 0 34px; background: rgba(239, 230, 210, .045); border-top: 1px dashed rgba(239, 230, 210, .18); }
+.detalle[hidden] { display: none; }
+.detalle-imagenes { grid-column: 2; display: flex; gap: 12px; flex-wrap: wrap; }
+.detalle-imagenes img { width: clamp(160px, 20vw, 320px); aspect-ratio: 16 / 10; object-fit: cover; }
+.detalle-texto { grid-column: 2; margin-top: 20px; }
+.detalle-texto p { max-width: 54ch; font: 400 20px/1.5 var(--sans); color: #cfc5b2; }
+.enlaces { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.enlace { padding: 10px 12px; border: 1px solid rgba(239, 230, 210, .35); border-radius: 6px; color: var(--crema); font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
+.enlace[href]:hover { background: var(--crema); color: var(--negro); }
+.enlace[aria-disabled="true"] { opacity: .35; border-style: dashed; cursor: not-allowed; }
+/* Entrada como teletexto. El recorte va en la fila y no en el elemento de la lista:
+   un elemento recortado por completo nunca cuenta como visible para el observador. */
+.js .entrada .fila { clip-path: inset(0 100% 0 0); }
+.js .entrada.visible .fila { animation: teletexto .55s steps(14) calc(var(--i, 0) * 70ms) both; }
+@keyframes teletexto { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (max-width: 800px) {
+  .fila { grid-template-columns: 64px minmax(0, 1fr) 32px; grid-template-areas: "anio rol signo" "titulo titulo titulo" "tipo tipo tipo"; row-gap: 8px; padding: 14px 0; }
+  .fila-anio { grid-area: anio; }
+  .fila-rol { grid-area: rol; }
+  .fila-titulo { grid-area: titulo; }
+  .fila-tipo { grid-area: tipo; }
+  .fila-signo { grid-area: signo; }
+  .detalle { grid-template-columns: 0 minmax(0, 1fr); }
+}
+/* Estática de cambio de canal */
+.estatica { position: fixed; z-index: 60; inset: 0; opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+.estatica canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+.estatica::after { content: ""; position: absolute; left: 0; right: 0; height: 18%; background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, .25), rgba(255, 255, 255, 0)); animation: rollo 1.1s linear infinite; }
+@keyframes rollo { from { top: -18%; } to { top: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .js .entrada .fila, .js .entrada.visible .fila { clip-path: none; animation: none; }
+  .estatica { display: none; }
+}

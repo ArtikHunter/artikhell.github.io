@@ -106,3 +106,173 @@ function updateCine() {
 
 renderPeliculas();
 enCadaScroll.push(updateCine);
+
+/* ---------------- Trayectoria ---------------- */
+const filtrosTrayectoria = $("#trayectoria-filtros");
+const guiaTrayectoria = $("#trayectoria-guia");
+let rolActivo = "todo";
+
+function crearEnlace({ nombre, url }) {
+  const enlace = document.createElement("a");
+  enlace.className = "enlace";
+  const externo = /^https?:/i.test(url || "");
+  enlace.textContent = `${nombre} ${externo ? "↗" : "→"}`;
+  if (!url) {
+    // Falta la dirección: queda visible pero apagado, para saber qué completar.
+    enlace.setAttribute("aria-disabled", "true");
+    enlace.title = "Falta el enlace";
+    return enlace;
+  }
+  enlace.href = url;
+  if (externo) {
+    enlace.target = "_blank";
+    enlace.rel = "noopener";
+  }
+  return enlace;
+}
+
+function renderFiltros() {
+  if (!filtrosTrayectoria) return;
+  filtrosTrayectoria.replaceChildren();
+  [["todo", { nombre: "Todo" }], ...Object.entries(roles)].forEach(([id, rol]) => {
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "filtro";
+    boton.dataset.rol = id;
+    boton.setAttribute("aria-pressed", String(id === rolActivo));
+    if (rol.color) {
+      const muestra = document.createElement("i");
+      muestra.style.setProperty("--color", rol.color);
+      muestra.setAttribute("aria-hidden", "true");
+      boton.append(muestra);
+    }
+    boton.append(rol.nombre);
+    boton.addEventListener("click", () => filtrarTrayectoria(id));
+    filtrosTrayectoria.append(boton);
+  });
+}
+
+function filtrarTrayectoria(id) {
+  rolActivo = id;
+  $$(".filtro", filtrosTrayectoria).forEach((boton) =>
+    boton.setAttribute("aria-pressed", String(boton.dataset.rol === id)),
+  );
+  $$(".entrada", guiaTrayectoria).forEach((entrada) => {
+    entrada.hidden = id !== "todo" && entrada.dataset.rol !== id;
+  });
+}
+
+function alternarFila(fila) {
+  const abierta = fila.getAttribute("aria-expanded") !== "true";
+  fila.setAttribute("aria-expanded", String(abierta));
+  $(".fila-signo", fila).textContent = abierta ? "−" : "+";
+  document.getElementById(fila.getAttribute("aria-controls")).hidden = !abierta;
+}
+
+function renderTrayectoria() {
+  if (!guiaTrayectoria) return;
+  renderFiltros();
+  guiaTrayectoria.replaceChildren();
+  trayectoria.forEach((trabajo, indice) => {
+    const rol = roles[trabajo.rol] || { nombre: trabajo.rol, color: "#8c8278" };
+    const entrada = document.createElement("li");
+    entrada.className = "entrada";
+    entrada.dataset.rol = trabajo.rol;
+    entrada.style.setProperty("--i", String(indice));
+    const fila = document.createElement("button");
+    fila.type = "button";
+    fila.className = "fila";
+    fila.setAttribute("aria-expanded", "false");
+    fila.setAttribute("aria-controls", `detalle-${indice}`);
+    fila.innerHTML =
+      '<span class="fila-anio"></span><span class="fila-rol"></span>' +
+      '<span class="fila-titulo"></span><span class="fila-tipo"></span>' +
+      '<span class="fila-signo" aria-hidden="true">+</span>';
+    $(".fila-anio", fila).textContent = trabajo.anio;
+    $(".fila-rol", fila).textContent = rol.nombre;
+    $(".fila-rol", fila).style.setProperty("--color", rol.color);
+    $(".fila-titulo", fila).textContent = trabajo.titulo;
+    $(".fila-tipo", fila).textContent = trabajo.tipo || "";
+    fila.addEventListener("click", () => alternarFila(fila));
+    const detalle = document.createElement("div");
+    detalle.className = "detalle";
+    detalle.id = `detalle-${indice}`;
+    detalle.hidden = true;
+    const imagenes = document.createElement("div");
+    imagenes.className = "detalle-imagenes";
+    (trabajo.imagenes || []).forEach((archivo) => {
+      const img = document.createElement("img");
+      img.src = archivo;
+      img.alt = "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      imagenes.append(img);
+    });
+    const texto = document.createElement("div");
+    texto.className = "detalle-texto";
+    const descripcion = document.createElement("p");
+    descripcion.textContent = trabajo.descripcion || "";
+    const enlaces = document.createElement("div");
+    enlaces.className = "enlaces";
+    (trabajo.enlaces || []).forEach((dato) => enlaces.append(crearEnlace(dato)));
+    texto.append(descripcion, enlaces);
+    detalle.append(imagenes, texto);
+    entrada.append(fila, detalle);
+    guiaTrayectoria.append(entrada);
+  });
+  filtrarTrayectoria(rolActivo);
+  observarTeletexto();
+}
+
+// Las filas entran como teletexto la primera vez que aparecen.
+let observadorTeletexto = null;
+function observarTeletexto() {
+  observadorTeletexto?.disconnect();
+  if (reduceMotion.matches || !("IntersectionObserver" in window)) {
+    $$(".entrada", guiaTrayectoria).forEach((entrada) => entrada.classList.add("visible"));
+    return;
+  }
+  observadorTeletexto = new IntersectionObserver(
+    (entradas) =>
+      entradas.forEach((registro) => {
+        if (!registro.isIntersecting) return;
+        registro.target.classList.add("visible");
+        observadorTeletexto.unobserve(registro.target);
+      }),
+    { threshold: 0.2 },
+  );
+  $$(".entrada", guiaTrayectoria).forEach((entrada) => observadorTeletexto.observe(entrada));
+}
+
+// Cambio de canal: estática de TV mientras el borde de la sección cruza la pantalla.
+const capaEstatica = $(".estatica");
+const lienzoEstatica = $(".estatica canvas");
+const seccionTrayectoria = $("#trayectoria");
+let estaticaSeccionFrame = 0;
+
+function dibujarEstaticaSeccion() {
+  estaticaSeccionFrame = 0;
+  const ctx = lienzoEstatica?.getContext("2d");
+  if (!ctx || Number(capaEstatica.style.opacity || 0) < 0.01 || document.hidden) return;
+  const datos = ctx.createImageData(lienzoEstatica.width, lienzoEstatica.height);
+  for (let i = 0; i < datos.data.length; i += 4) {
+    const v = Math.random() * 255;
+    datos.data[i] = datos.data[i + 1] = datos.data[i + 2] = v;
+    datos.data[i + 3] = 255;
+  }
+  ctx.putImageData(datos, 0, 0);
+  estaticaSeccionFrame = requestAnimationFrame(dibujarEstaticaSeccion);
+}
+
+function updateEstatica() {
+  if (!capaEstatica || !seccionTrayectoria) return;
+  const borde = seccionTrayectoria.getBoundingClientRect().top / innerHeight;
+  const cerca = clamp(1 - Math.abs(borde - 0.5) / 0.16, 0, 1);
+  const opacidad = reduceMotion.matches ? 0 : 0.55 * smoothstep(0, 1, cerca);
+  capaEstatica.style.opacity = String(+opacidad.toFixed(3));
+  if (opacidad >= 0.01 && !estaticaSeccionFrame)
+    estaticaSeccionFrame = requestAnimationFrame(dibujarEstaticaSeccion);
+}
+
+renderTrayectoria();
+enCadaScroll.push(updateEstatica);

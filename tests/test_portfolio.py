@@ -450,6 +450,39 @@ class PortfolioTests(unittest.TestCase):
         self.page.evaluate(mover, 0.3)
         self.page.wait_for_function(f"{apertura} === '1'")
 
+    def test_career_filters_and_rows(self):
+        self.page.locator("#trayectoria").scroll_into_view_if_needed()
+        filas = self.page.locator(".fila")
+        total = filas.count()
+        self.assertGreater(total, 2)
+        direccion = self.page.get_by_role("button", name="Dirección", exact=True)
+        direccion.click()
+        self.assertEqual(direccion.get_attribute("aria-pressed"), "true")
+        roles = self.page.locator(".entrada:not([hidden])").evaluate_all("els => els.map(el => el.dataset.rol)")
+        self.assertTrue(roles)
+        self.assertTrue(all(rol == "direccion" for rol in roles))
+        self.page.get_by_role("button", name="Todo", exact=True).click()
+        self.assertEqual(self.page.locator(".entrada:not([hidden])").count(), total)
+        fila = filas.first
+        detalle = self.page.locator("#" + fila.get_attribute("aria-controls"))
+        self.assertEqual(fila.get_attribute("aria-expanded"), "false")
+        fila.click()
+        self.assertEqual(fila.get_attribute("aria-expanded"), "true")
+        self.assertTrue(detalle.is_visible())
+        fila.click()
+        self.assertEqual(fila.get_attribute("aria-expanded"), "false")
+        self.assertFalse(detalle.is_visible())
+        self.assertGreater(self.page.locator(".enlace[aria-disabled='true']").count(), 0)
+
+    def test_channel_static_peaks_at_the_career_border(self):
+        opacidad = "Number(getComputedStyle(document.querySelector('.estatica')).opacity)"
+        mover = """f => { const seccion = document.querySelector('#trayectoria');
+            scrollTo({top: seccion.getBoundingClientRect().top + scrollY - innerHeight * f, behavior: 'instant'}); }"""
+        self.page.evaluate(mover, 0.5)
+        self.page.wait_for_function(f"Math.abs({opacidad} - .55) < .02")
+        self.page.evaluate(mover, 1.3)
+        self.page.wait_for_function(f"{opacidad} < .01")
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
