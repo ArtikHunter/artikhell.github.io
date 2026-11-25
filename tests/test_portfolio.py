@@ -74,17 +74,26 @@ class PortfolioTests(unittest.TestCase):
         )
 
     def gallery(self, progress=0.44):
-        self.page.evaluate(
-            """p => {
-              const runway = document.querySelector('#gallery-runway');
-              scrollTo({top:runway.getBoundingClientRect().top+scrollY+
-                (runway.offsetHeight-innerHeight)*p, behavior:'instant'});
-            }""",
-            progress,
-        )
-        self.page.wait_for_function(
-            "p => Math.abs(galleryProgress - p) < .002", arg=progress
-        )
+        # Un ajuste de scroll del navegador (anclaje, foco) puede mover la página justo
+        # después de saltar: se reintenta el salto antes de dar la espera por fallida.
+        for intento in range(4):
+            self.page.evaluate(
+                """p => {
+                  const runway = document.querySelector('#gallery-runway');
+                  scrollTo({top:runway.getBoundingClientRect().top+scrollY+
+                    (runway.offsetHeight-innerHeight)*p, behavior:'instant'});
+                }""",
+                progress,
+            )
+            try:
+                self.page.wait_for_function(
+                    "p => Math.abs(galleryProgress - p) < .002", arg=progress,
+                    timeout=4000 if intento < 3 else 30000,
+                )
+                return
+            except Exception:
+                if intento == 3:
+                    raise
 
     def archive(self):
         self.page.locator("#archive-index").scroll_into_view_if_needed()

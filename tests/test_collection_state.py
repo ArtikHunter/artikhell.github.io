@@ -59,7 +59,8 @@ class CollectionStateTests(unittest.TestCase):
                 self.page.evaluate("""async () => {
                     const animations = document.getAnimations();
                     animations.forEach(animation => animation.pause());
-                    await Promise.all(animations.map(animation => animation.ready));
+                    // Una animación ajena puede cancelarse a mitad de camino: allSettled evita un AbortError.
+                    await Promise.allSettled(animations.map(animation => animation.ready));
                 }""")
                 ghost = self.page.locator(".showcase-ghost").first
                 before = ghost.bounding_box()["y"]
