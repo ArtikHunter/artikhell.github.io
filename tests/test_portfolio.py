@@ -212,6 +212,9 @@ class PortfolioTests(unittest.TestCase):
             with self.subTest(exit=exit_mode):
                 self.gallery()
                 self.page.mouse.move(5, 5)
+                # La foto termina de volver de su modo anterior antes de buscar la gota.
+                self.page.wait_for_function("purePhotoBlend === 0")
+                tear.wait_for(state="visible")
                 tear.hover()
                 self.page.wait_for_function("document.body.classList.contains('photo-only')")
                 if exit_mode == "blur":
