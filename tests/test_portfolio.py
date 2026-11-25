@@ -420,6 +420,36 @@ class PortfolioTests(unittest.TestCase):
                 self.assertNotRegex(fila, r"\bfotos\b")
                 self.assertNotRegex(fila, r"^\s*\d{2}\b")
 
+    def test_films_show_year_duration_and_credit(self):
+        esperados = self.page.evaluate("peliculas.map(p => [p.anio, p.duracion, p.credito].join(' · '))")
+        self.assertTrue(esperados)
+        datos = self.page.locator(".pelicula-datos").evaluate_all("els => els.map(el => el.textContent.trim())")
+        self.assertEqual(datos, esperados)
+
+    def test_video_embeds_only_when_available(self):
+        self.assertEqual(self.page.locator(".pelicula-ver").count(), 0)
+        self.page.evaluate("peliculas[0].video = 'https://youtu.be/abc123'; renderPeliculas()")
+        boton = self.page.locator(".pelicula-ver").first
+        boton.scroll_into_view_if_needed()
+        boton.click()
+        self.assertEqual(self.page.locator(".pelicula iframe").first.get_attribute("src"),
+                         "https://www.youtube-nocookie.com/embed/abc123?autoplay=1")
+        self.assertEqual(self.page.evaluate("urlIncrustada('https://www.youtube.com/watch?v=xyz9')"),
+                         "https://www.youtube-nocookie.com/embed/xyz9?autoplay=1")
+        self.assertEqual(self.page.evaluate("urlIncrustada('https://vimeo.com/76979871')"),
+                         "https://player.vimeo.com/video/76979871?autoplay=1")
+        self.assertIsNone(self.page.evaluate("urlIncrustada('https://example.com/video')"))
+
+    def test_featured_film_opens_with_scroll(self):
+        apertura = "getComputedStyle(document.querySelector('.pelicula-destacada')).getPropertyValue('--apertura').trim()"
+        mover = """f => { const marco = document.querySelector('.pelicula-destacada .pelicula-marco');
+            scrollTo({top: marco.getBoundingClientRect().top + scrollY - innerHeight * f, behavior: 'instant'}); }"""
+        self.page.evaluate(mover, 0.97)
+        self.page.wait_for_timeout(120)
+        self.assertEqual(self.page.evaluate(apertura), "0")
+        self.page.evaluate(mover, 0.3)
+        self.page.wait_for_function(f"{apertura} === '1'")
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
