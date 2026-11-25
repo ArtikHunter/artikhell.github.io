@@ -50,14 +50,22 @@ const cargaTerminada = new Promise((resolve) => {
     .then(resolve);
 });
 
+const CARGA_SALIDA = 700;
 cargaTerminada.then(() => {
   clearInterval(relojCarga);
   ponerCarga(1);
-  raiz.classList.remove("cargando");
-  raiz.classList.add("listo");
+  // Se apaga la luz: la capa se desvanece sin capturar el puntero y el TV se enciende.
+  raiz.classList.add("saliendo");
   tv?.classList.add("encendido");
-  programarCanal();
-  scheduleScroll();
+  setTimeout(
+    () => {
+      raiz.classList.remove("cargando", "saliendo");
+      raiz.classList.add("listo");
+      programarCanal();
+      scheduleScroll();
+    },
+    reduceMotion.matches ? 0 : CARGA_SALIDA,
+  );
 });
 
 /* ---------------- Canales ---------------- */

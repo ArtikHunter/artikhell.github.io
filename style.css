@@ -965,12 +965,13 @@ body.photo-only, body.photo-only * { cursor: none !important; }
   background:
     radial-gradient(60% 55% at 50% 0%, rgba(196, 42, 28, .5), rgba(196, 42, 28, 0) 70%),
     var(--negro) var(--textura-negro);
-  transition: opacity .7s ease, visibility 0s .7s;
+  transition: opacity .7s ease;
   /* Respaldo: si el JavaScript falla, la carga se retira sola. */
   animation: carga-respaldo .6s 9s forwards;
 }
 html.cargando { overflow: hidden; }
-html.listo .carga { opacity: 0; visibility: hidden; animation: none; }
+html.saliendo .carga { opacity: 0; pointer-events: none; animation: none; }
+html.listo .carga { opacity: 0; visibility: hidden; pointer-events: none; animation: none; }
 @keyframes carga-respaldo { to { opacity: 0; visibility: hidden; } }
 .carga-lampara { position: absolute; left: 50%; top: 0; width: 150px; transform: translateX(-50%); overflow: visible; }
 .carga-lampara line { stroke: var(--tinta); stroke-width: 3; }
