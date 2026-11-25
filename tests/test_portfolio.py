@@ -236,6 +236,9 @@ class PortfolioTests(unittest.TestCase):
         eye.tap()
         self.assertEqual(eye.get_attribute("aria-pressed"), "true")
         tear = self.page.locator("#tear-trigger")
+        # El toque llega con retraso en móvil: esperar la gota evita que Playwright
+        # desplace la página (y cambie el recorrido) mientras reintenta.
+        tear.wait_for(state="visible")
         tear.tap()
         self.page.wait_for_function("document.body.classList.contains('photo-only')")
         tear.tap()
