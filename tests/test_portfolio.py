@@ -561,6 +561,11 @@ class PortfolioTests(unittest.TestCase):
                 self.nuevo_contexto(**opciones)
                 self.assertFalse(self.page.evaluate("document.documentElement.classList.contains('cursor-activo')"))
 
+    def test_channel_change_shows_static(self):
+        self.page.locator(".tv-perilla").click()
+        self.page.wait_for_function(
+            "Number(getComputedStyle(document.querySelector('.tv-estatica')).opacity) > .5", timeout=1000)
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)

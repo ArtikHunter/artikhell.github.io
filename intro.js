@@ -225,7 +225,7 @@ function animarOla() {
 }
 
 function limpiarIntro() {
-  [tvZoom, tvCapa, tvLineas, tvRetrato, retratoCapa, retratoTexto].forEach((el) =>
+  [tvZoom, tvCapa, tvLineas, tvRetrato, tvEstatica, retratoCapa, retratoTexto].forEach((el) =>
     el?.removeAttribute("style"),
   );
   ["--zoom", "--fundido", "--nombre", "--resumen", "--liquido"].forEach((v) =>
@@ -274,8 +274,13 @@ function updateIntroScroll() {
   tvLineas.style.opacity = (1 - zoom).toFixed(3);
   // Estática en la mitad del zoom; luego la pantalla muestra el retrato.
   const ruido = clamp(1 - Math.abs(zoom - 0.5) / 0.22, 0, 1);
-  tvEstatica.style.opacity = (ruido * 0.85).toFixed(3);
-  if (ruido > 0.02) dibujarEstatica();
+  if (ruido > 0.02) {
+    tvEstatica.style.opacity = (ruido * 0.85).toFixed(3);
+    dibujarEstatica();
+  } else {
+    // Sin zoom, la estática la controla el cambio de canal (.activa).
+    tvEstatica.style.removeProperty("opacity");
+  }
   tvRetrato.style.opacity = smoothstep(0.5, 0.78, zoom).toFixed(3);
   tvCapa.style.opacity = (1 - fundido).toFixed(3);
   tvCapa.style.visibility = fundido >= 1 ? "hidden" : "";
