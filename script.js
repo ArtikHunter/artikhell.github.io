@@ -1196,5 +1196,3 @@ renderArchivePage();
 showPhoto({ animate: false });
 scheduleScroll();
 
-// Provisorio hasta que exista la pantalla de carga: la página queda lista al ejecutar.
-document.documentElement.classList.add("listo");

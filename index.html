@@ -28,6 +28,20 @@
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <!-- Cuarto oscuro: una copia sale del corte y se revela mientras carga la página -->
+    <div class="carga" aria-hidden="true">
+      <svg class="carga-lampara" viewBox="0 0 160 170" focusable="false">
+        <line x1="80" y1="0" x2="80" y2="62" />
+        <path class="lampara-casco" d="M44 62 L116 62 L132 118 L28 118 Z" />
+        <rect class="lampara-luz" x="30" y="112" width="100" height="16" rx="3" />
+        <path class="carga-cono" d="M38 128 L122 128 L150 170 L10 170 Z" />
+      </svg>
+      <div class="carga-bolsillo">
+        <div class="carga-copia"><img src="recursos/carga.jpg" alt="" /></div>
+      </div>
+      <div class="carga-corte"></div>
+      <div class="carga-reloj">00:00</div>
+    </div>
     <div class="cursor-mira" aria-hidden="true" data-estado="normal"></div>
 
     <header class="site-header">

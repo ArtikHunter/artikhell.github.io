@@ -281,6 +281,35 @@ class PortfolioTests(unittest.TestCase):
         for palabra in ("fotografía", "fotografías", "cine", "trayectoria", "sobre mí"):
             self.assertNotIn(palabra, titulos)
 
+    def test_loader_finishes_and_unlocks_scroll(self):
+        self.assertEqual(self.page.locator(".carga").count(), 1)
+        inicio = self.page.evaluate("performance.now()")
+        self.page.reload(wait_until="domcontentloaded")
+        self.esperar_carga()
+        self.assertLess(self.page.evaluate("performance.now()"), 7000)
+        self.page.wait_for_function(
+            "getComputedStyle(document.querySelector('.carga')).visibility === 'hidden'"
+        )
+        self.page.evaluate("scrollTo({top: 600, behavior: 'instant'})")
+        self.page.wait_for_function("scrollY > 0")
+
+    def test_loader_survives_a_missing_tv_image(self):
+        for imagen in ("**/recursos/tv.webp", "**/recursos/tv-movil.webp"):
+            self.page.route(imagen, lambda route: route.fulfill(status=404, body="missing"))
+        self.page.reload(wait_until="networkidle")
+        self.esperar_carga()
+        self.assertEqual(self.page.locator(".carga").count(), 1)
+        self.assertTrue(self.page.evaluate("document.querySelector('.tv').classList.contains('encendido')"))
+
+    def test_tv_knob_changes_channel(self):
+        canal = self.page.locator(".tv-canal")
+        antes = canal.get_attribute("src")
+        self.page.locator(".tv-perilla").click()
+        self.page.wait_for_function(
+            "src => document.querySelector('.tv-canal').getAttribute('src') !== src", arg=antes
+        )
+        self.assertEqual(self.page.evaluate("canalActual"), 1)
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)

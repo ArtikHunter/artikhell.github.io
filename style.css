@@ -953,3 +953,55 @@ body.photo-only, body.photo-only * { cursor: none !important; }
   .contacto-sala { grid-template-columns: 1fr; grid-template-rows: auto; }
   .contacto-form { grid-column: 1; grid-row: auto; }
 }
+
+/* ================= Carga: cuarto oscuro ================= */
+.carga { display: none; }
+.js .carga {
+  --carga: 0;
+  display: block;
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background:
+    radial-gradient(60% 55% at 50% 0%, rgba(196, 42, 28, .5), rgba(196, 42, 28, 0) 70%),
+    var(--negro) var(--textura-negro);
+  transition: opacity .7s ease, visibility 0s .7s;
+  /* Respaldo: si el JavaScript falla, la carga se retira sola. */
+  animation: carga-respaldo .6s 9s forwards;
+}
+html.cargando { overflow: hidden; }
+html.listo .carga { opacity: 0; visibility: hidden; animation: none; }
+@keyframes carga-respaldo { to { opacity: 0; visibility: hidden; } }
+.carga-lampara { position: absolute; left: 50%; top: 0; width: 150px; transform: translateX(-50%); overflow: visible; }
+.carga-lampara line { stroke: var(--tinta); stroke-width: 3; }
+.carga-cono { fill: var(--antorcha); opacity: .16; }
+.carga-bolsillo { position: absolute; left: 50%; bottom: 36vh; width: min(260px, 52vw); aspect-ratio: 280 / 330; transform: translateX(-50%); overflow: hidden; }
+.carga-copia {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px;
+  background: #f2ebdc;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  transform: translateY(calc((1 - var(--carga)) * 92%));
+  transition: transform .6s var(--ease);
+}
+.carga-copia img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; filter: brightness(calc(.06 + .94 * var(--carga))); transition: filter .9s ease; }
+.carga-corte { position: absolute; left: 50%; bottom: calc(36vh - 6px); width: min(560px, 82vw); height: 12px; transform: translateX(-50%); border-radius: 6px; background: #020101; box-shadow: 0 2px 0 rgba(255, 92, 60, .35), 0 -1px 0 rgba(0, 0, 0, .9) inset; }
+.carga-reloj { position: absolute; left: 0; right: 0; bottom: calc(36vh - 58px); text-align: center; font: 500 18px/1 var(--mono); letter-spacing: .12em; color: var(--antorcha); }
+
+/* ================= TV: encendido e inclinación ================= */
+.tv { transform: translate(-50%, -48%) perspective(1400px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+.js .tv:not(.encendido) .tv-canal { opacity: 0; }
+.tv.encendido .tv-canal { animation: crt-encender .75s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes crt-encender {
+  0% { opacity: 1; transform: scale(.15, .004); filter: brightness(6) contrast(1.12); }
+  35% { transform: scale(1, .004); filter: brightness(5) contrast(1.12); }
+  100% { transform: scale(1, 1); filter: contrast(1.12) saturate(1.1); }
+}
+.tv-estatica.activa { opacity: .9; }
+@media (prefers-reduced-motion: reduce) {
+  .js .carga { transition: none; }
+  .tv.encendido .tv-canal { animation: none; }
+}
