@@ -95,6 +95,18 @@ class PortfolioTests(unittest.TestCase):
                 if intento == 3:
                     raise
 
+    def intro(self, progress):
+        self.page.evaluate(
+            """p => {
+              const intro = document.querySelector('#inicio');
+              scrollTo({top: intro.getBoundingClientRect().top + scrollY +
+                (intro.offsetHeight - innerHeight) * p, behavior: 'instant'});
+            }""",
+            progress,
+        )
+        self.page.wait_for_function("p => Math.abs(introProgress - p) < .003", arg=progress)
+        self.page.wait_for_timeout(60)
+
     def archive(self):
         self.page.locator("#archive-index").scroll_into_view_if_needed()
         self.page.wait_for_timeout(100)
@@ -309,6 +321,51 @@ class PortfolioTests(unittest.TestCase):
             "src => document.querySelector('.tv-canal').getAttribute('src') !== src", arg=antes
         )
         self.assertEqual(self.page.evaluate("canalActual"), 1)
+
+    def test_intro_reveals_name_and_summary(self):
+        opacidad = "el => getComputedStyle(el).opacity"
+        self.intro(0)
+        self.assertEqual(self.page.locator(".tv-capa").evaluate(opacidad), "1")
+        self.intro(0.7)
+        self.assertEqual(self.page.locator(".tv-capa").evaluate(opacidad), "0")
+        nombre = self.page.locator("#nombre").bounding_box()
+        self.assertGreaterEqual(nombre["y"], 0)
+        self.assertLessEqual(nombre["y"] + nombre["height"], 900)
+        self.assertEqual(self.page.evaluate(
+            "getComputedStyle(document.querySelector('.intro-escena')).getPropertyValue('--resumen').trim()"), "1")
+        self.intro(1)
+        self.assertNotEqual(self.page.locator(".retrato-capa").evaluate("el => getComputedStyle(el).clipPath"), "none")
+
+    def test_intro_states_reverse_cleanly(self):
+        leer = """() => {
+            const estilo = getComputedStyle(document.querySelector('.intro-escena'));
+            return ['--zoom', '--fundido', '--nombre', '--resumen', '--liquido']
+              .map(nombre => estilo.getPropertyValue(nombre).trim())
+              .concat([document.querySelector('#nombre').getBoundingClientRect().top.toFixed(1),
+                       getComputedStyle(document.querySelector('.tv-capa')).opacity]);
+        }"""
+        self.intro(0.7)
+        antes = self.page.evaluate(leer)
+        self.intro(0.1)
+        self.intro(0.7)
+        self.assertEqual(self.page.evaluate(leer), antes)
+
+    def test_reduced_motion_intro_is_static(self):
+        self.context.close()
+        self.context = self.browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
+        self.page = self.context.new_page()
+        self.page.on("pageerror", lambda error: self.errors.append(str(error)))
+        self.page.route("**/*", lambda route: route.continue_()
+                        if urlsplit(route.request.url).hostname == "127.0.0.1" else route.abort())
+        self.page.goto(self.base_url, wait_until="networkidle")
+        self.esperar_carga()
+        self.assertNotEqual(self.page.locator(".intro-escena").evaluate("el => getComputedStyle(el).position"), "sticky")
+        for selector in ("#nombre", ".resumen"):
+            with self.subTest(selector=selector):
+                elemento = self.page.locator(selector)
+                elemento.scroll_into_view_if_needed()
+                self.assertTrue(elemento.is_visible())
+                self.assertEqual(elemento.evaluate("el => getComputedStyle(el).opacity"), "1")
 
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")

@@ -1006,3 +1006,26 @@ html.listo .carga { opacity: 0; visibility: hidden; pointer-events: none; animat
   .js .carga { transition: none; }
   .tv.encendido .tv-canal { animation: none; }
 }
+
+/* ================= Retrato bloqueado ================= */
+.intro-escena { --zoom: 0; --fundido: 0; --nombre: 0; --resumen: 0; --liquido: 0; }
+.tv { transform: translate(-50%, -48%) perspective(1400px) rotateX(calc(var(--rx, 0deg) * var(--inclina, 1))) rotateY(calc(var(--ry, 0deg) * var(--inclina, 1))); }
+.tv-retrato { position: absolute; inset: 0; opacity: 0; }
+.tv-retrato img { width: 100%; height: 100%; object-fit: cover; object-position: 75% 40%; }
+.retrato-texto { transform: translateY(calc((1 - var(--nombre)) * 42vh)); will-change: transform; }
+.resumen {
+  opacity: var(--resumen);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--resumen) * 130% - 30%), transparent calc(var(--resumen) * 130%));
+  mask-image: linear-gradient(to bottom, #000 calc(var(--resumen) * 130% - 30%), transparent calc(var(--resumen) * 130%));
+}
+.tv-capa { will-change: opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .intro { height: auto; }
+  .intro-escena { position: relative; height: auto; display: flex; flex-direction: column-reverse; overflow: visible; }
+  .retrato-capa, .tv-capa { position: relative; height: 100svh; }
+  .tv-capa { opacity: 1 !important; visibility: visible !important; }
+  .tv-zoom { transform: none !important; }
+  .retrato-capa { clip-path: none !important; }
+  .retrato-texto { transform: none !important; opacity: 1 !important; }
+  .resumen { opacity: 1 !important; -webkit-mask-image: none !important; mask-image: none !important; }
+}
