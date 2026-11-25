@@ -266,6 +266,21 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(eye.get_attribute("aria-pressed"), "false")
         self.assertEqual(self.page.evaluate("document.documentElement.scrollWidth"), 390)
 
+    def test_only_contact_has_a_visible_section_title(self):
+        visibles = self.page.evaluate("""() => [...document.querySelectorAll('h2')]
+            .filter(el => {
+                const style = getComputedStyle(el), box = el.getBoundingClientRect();
+                return style.display !== 'none' && style.visibility !== 'hidden' &&
+                    box.width > 1 && box.height > 1 && !el.closest('.sr-only');
+            })
+            .map(el => el.textContent.trim())""")
+        self.assertEqual(visibles, ["Contacto"])
+        titulos = self.page.evaluate("""() => [...document.querySelectorAll('h1, h2, h3, nav a')]
+            .filter(el => el.getBoundingClientRect().width > 1 && !el.closest('.sr-only'))
+            .map(el => el.textContent.trim().replace(/[.:]$/, '').toLowerCase())""")
+        for palabra in ("fotografía", "fotografías", "cine", "trayectoria", "sobre mí"):
+            self.assertNotIn(palabra, titulos)
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
@@ -274,7 +289,14 @@ class PortfolioTests(unittest.TestCase):
         for collection in catalog:
             self.assertTrue(collection["fotos"], collection["id"])
             photos.update(photo["archivo"] for photo in collection["fotos"])
-        resources = photos | {"index.html", "style.css", "script.js", "colecciones.js", "perfil.jpg"}
+        resources = photos | {
+            "index.html", "style.css", "script.js", "colecciones.js", "perfil.jpg",
+            "intro.js", "liquido.js", "secciones.js", "cursor.js", "peliculas.js", "trayectoria.js",
+            "recursos/tv.webp", "recursos/tv-movil.webp", "recursos/retrato.jpg",
+            "recursos/retrato-movil.jpg", "recursos/carga.jpg", "recursos/carta-ajuste.png",
+            "recursos/textura-negro.jpg", "recursos/textura-crema.jpg", "recursos/textura-rojo.jpg",
+            "recursos/fondo-tv.jpg", "recursos/liquido.jpg",
+        }
         for filename in sorted(resources):
             with self.subTest(resource=filename):
                 self.assertTrue((ROOT / filename).is_file())
@@ -382,34 +404,6 @@ class PortfolioTests(unittest.TestCase):
         self.page.mouse.move(800, 450)
         self.page.wait_for_function("pointerFrame === 0", timeout=5000)
         self.assertNotEqual(self.page.locator(".cursor-halo").evaluate("el => getComputedStyle(el).transform"), "none")
-
-    def test_motion_preference_changes_do_not_accumulate_waves(self):
-        self.page.emulate_media(reduced_motion="reduce")
-        self.page.reload(wait_until="networkidle")
-        self.esperar_carga()
-        self.page.wait_for_function("reduceMotion.matches")
-        for x in range(200, 800, 100):
-            self.page.mouse.move(x, 400)
-            self.page.wait_for_timeout(115)
-        self.assertEqual(self.page.evaluate("waves.length"), 0)
-        self.assertEqual(self.page.evaluate("wavesFrame"), 0)
-        self.page.emulate_media(reduced_motion="no-preference")
-        self.page.wait_for_function("!reduceMotion.matches")
-        self.page.mouse.move(850, 450)
-        self.page.wait_for_function("waves.length > 0")
-        self.page.emulate_media(reduced_motion="reduce")
-        self.page.wait_for_function("waves.length === 0 && wavesFrame === 0 && pointerFrame === 0")
-
-    def test_mobile_menu_escape_restores_focus(self):
-        self.page.set_viewport_size({"width": 390, "height": 844})
-        button = self.page.locator("#menu-toggle")
-        button.click()
-        self.assertEqual(button.get_attribute("aria-expanded"), "true")
-        self.page.locator("#mobile-menu a").first.focus()
-        self.page.keyboard.press("Escape")
-        self.assertEqual(button.get_attribute("aria-expanded"), "false")
-        self.assertTrue(button.evaluate("el => document.activeElement === el"))
-        self.assertTrue(self.page.locator("#mobile-menu").evaluate("el => el.inert"))
 
     def test_viewer_rejoins_the_real_collection_index(self):
         self.gallery()

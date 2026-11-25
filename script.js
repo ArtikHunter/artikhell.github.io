@@ -950,8 +950,7 @@ window.addEventListener("keydown", (event) => {
     galleryProgress < 0.26 ||
     galleryProgress > 0.82 ||
     stageRect.bottom <= 0 ||
-    stageRect.top >= innerHeight ||
-    $("#menu-toggle").getAttribute("aria-expanded") === "true"
+    stageRect.top >= innerHeight
   )
     return;
   if (key === "escape") {
@@ -974,16 +973,6 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-// Retrato: si el archivo no existe, conservamos el fondo sin textos.
-const portrait = $(".portrait-card img");
-portrait.addEventListener("error", () => {
-  portrait.classList.add("is-missing");
-});
-portrait.addEventListener("load", () => {
-  portrait.classList.remove("is-missing");
-});
-if (portrait.complete && !portrait.naturalWidth)
-  portrait.dispatchEvent(new Event("error"));
 
 /* ============================================================
    MOVIMIENTO CINEMATOGRÁFICO
@@ -993,18 +982,7 @@ if (portrait.complete && !portrait.naturalWidth)
    ============================================================ */
 const runway = $("#gallery-runway");
 const sticky = $("#gallery-sticky");
-const hero = $(".hero");
 const siteHeader = $(".site-header");
-const cursorHalo = $(".cursor-halo");
-const finePointer = matchMedia("(pointer: fine)");
-const pointerTarget = { x: 0, y: 0 };
-const pointerSmooth = { x: 0, y: 0 };
-const pointerPosition = { x: -100, y: -100 };
-const cursorSmooth = { x: -100, y: -100 };
-let pointerActive = false;
-let pointerFrame = 0;
-let heroVisible = true;
-let lastMotionTime = 0;
 
 let galleryProgress = 0;
 const sideSlots = $$(".side-slot");
@@ -1191,307 +1169,26 @@ function updateGalleryScroll() {
   });
 }
 
-let lastHeroProgress = -1;
-function updateHeroScroll(height) {
-  const progress = clamp(scrollY / (height * 0.98), 0, 1);
-  if (progress === lastHeroProgress) return;
-  lastHeroProgress = progress;
-  hero.style.setProperty("--hero-shrink", (1 - progress * 0.53).toFixed(4));
-  hero.style.setProperty("--hero-turn", `${(progress * 75).toFixed(2)}deg`);
-  hero.style.setProperty("--hero-drift", `${(-progress * 105).toFixed(2)}px`);
-  hero.style.setProperty(
-    "--hero-disappear",
-    (1 - smoothstep(0.1, 0.94, progress)).toFixed(4),
-  );
-  hero.style.setProperty(
-    "--hero-veil-opacity",
-    smoothstep(0.16, 0.84, progress).toFixed(4),
-  );
-  const headerProgress = smoothstep(0.03, 0.34, clamp(scrollY / height, 0, 1));
-  siteHeader.style.setProperty("--header-shrink", headerProgress.toFixed(4));
-  siteHeader.classList.toggle("is-compact", headerProgress > 0.6);
-}
-
+// Cada sección registra aquí su actualización por cuadro de scroll.
+const enCadaScroll = [];
 function scheduleScroll() {
   if (galleryAnimationFrame) return;
   galleryAnimationFrame = requestAnimationFrame(() => {
-    const heroHeight = Math.max(1, hero.offsetHeight);
     updateGalleryScroll();
-    updateHeroScroll(heroHeight);
+    enCadaScroll.forEach((actualizar) => actualizar());
     galleryAnimationFrame = 0;
   });
 }
 window.addEventListener("scroll", scheduleScroll, { passive: true });
 window.addEventListener("resize", scheduleScroll);
 reduceMotion.addEventListener("change", scheduleScroll);
-
-// El bucle solo vive mientras el cursor o la inercia tienen movimiento pendiente.
-function stopPointerAnimation() {
-  cancelAnimationFrame(pointerFrame);
-  pointerFrame = 0;
-  lastMotionTime = 0;
-  cursorHalo.classList.remove("is-visible");
-}
-function schedulePointer() {
-  if (
-    !pointerFrame &&
-    pointerActive &&
-    finePointer.matches &&
-    !reduceMotion.matches &&
-    !document.hidden
-  ) {
-    pointerFrame = requestAnimationFrame(animatePointer);
-  }
-}
-function animatePointer(timestamp) {
-  pointerFrame = 0;
-  const rate = clamp(
-    (timestamp - (lastMotionTime || timestamp)) / 16.67,
-    0.3,
-    3,
-  );
-  const ease = 1 - Math.pow(0.88, rate);
-  pointerSmooth.x += (pointerTarget.x - pointerSmooth.x) * ease;
-  pointerSmooth.y += (pointerTarget.y - pointerSmooth.y) * ease;
-  cursorSmooth.x +=
-    (pointerPosition.x - cursorSmooth.x) * (1 - Math.pow(0.75, rate));
-  cursorSmooth.y +=
-    (pointerPosition.y - cursorSmooth.y) * (1 - Math.pow(0.75, rate));
-  if (heroVisible) {
-    hero.style.setProperty(
-      "--pointer-x",
-      `${(pointerSmooth.x * 17).toFixed(2)}px`,
-    );
-    hero.style.setProperty(
-      "--pointer-y",
-      `${(pointerSmooth.y * 13).toFixed(2)}px`,
-    );
-  }
-  cursorHalo.style.transform = `translate3d(${cursorSmooth.x}px,${cursorSmooth.y}px,0) translate(-50%,-50%)`;
-  cursorHalo.classList.add("is-visible");
-  lastMotionTime = timestamp;
-  const pending =
-    Math.abs(pointerPosition.x - cursorSmooth.x) > 0.1 ||
-    Math.abs(pointerPosition.y - cursorSmooth.y) > 0.1 ||
-    (heroVisible &&
-      (Math.abs(pointerTarget.x - pointerSmooth.x) > 0.001 ||
-        Math.abs(pointerTarget.y - pointerSmooth.y) > 0.001));
-  if (pending) schedulePointer();
-  else lastMotionTime = 0;
-}
-document.addEventListener(
-  "pointermove",
-  (event) => {
-    if (
-      !finePointer.matches ||
-      reduceMotion.matches ||
-      (event.pointerType && event.pointerType !== "mouse")
-    )
-      return;
-    pointerPosition.x = event.clientX;
-    pointerPosition.y = event.clientY;
-    pointerTarget.x = (event.clientX / innerWidth - 0.5) * 2;
-    pointerTarget.y = (event.clientY / innerHeight - 0.5) * 2;
-    pointerActive = true;
-    if (heroVisible) {
-      hero.style.setProperty(
-        "--mouse-x",
-        `${(event.clientX / innerWidth) * 100}%`,
-      );
-      hero.style.setProperty(
-        "--mouse-y",
-        `${(event.clientY / innerHeight) * 100}%`,
-      );
-    }
-    schedulePointer();
-  },
-  { passive: true },
-);
-document.addEventListener("pointerleave", () => {
-  pointerActive = false;
-  stopPointerAnimation();
-});
-document.addEventListener("pointerover", (event) => {
-  if (finePointer.matches)
-    cursorHalo.classList.toggle(
-      "is-interactive",
-      !!event.target.closest("a, button"),
-    );
-});
-
-/* Ondas suaves detrás de la portada, inspiradas en la respuesta
-   pictórica al ratón. Son un efecto Canvas 2D sencillo, no WebGL. */
-const wavesCanvas = $("#hero-waves");
-const wavesContext = wavesCanvas.getContext("2d");
-let waves = [];
-let wavesFrame = 0;
-let lastWave = 0;
-let waveScale = 1;
-let wavesNeedResize = true;
-function resizeWaves() {
-  if (!wavesContext) return;
-  const rect = hero.getBoundingClientRect();
-  waveScale = Math.min(devicePixelRatio || 1, 2);
-  wavesCanvas.width = Math.round(rect.width * waveScale);
-  wavesCanvas.height = Math.round(rect.height * waveScale);
-  wavesContext.setTransform(waveScale, 0, 0, waveScale, 0, 0);
-  wavesNeedResize = false;
-}
-function stopWaves() {
-  cancelAnimationFrame(wavesFrame);
-  wavesFrame = 0;
-  waves = [];
-  wavesContext?.clearRect(
-    0,
-    0,
-    wavesCanvas.width / waveScale,
-    wavesCanvas.height / waveScale,
-  );
-}
-function drawWaves(now) {
-  if (
-    !wavesContext ||
-    reduceMotion.matches ||
-    document.hidden ||
-    !heroVisible
-  ) {
-    stopWaves();
-    return;
-  }
-  wavesContext.clearRect(
-    0,
-    0,
-    wavesCanvas.width / waveScale,
-    wavesCanvas.height / waveScale,
-  );
-  waves = waves.filter((wave) => now - wave.start < 1350);
-  waves.forEach((wave) => {
-    const t = (now - wave.start) / 1350;
-    for (let ring = 0; ring < 2; ring++) {
-      const radius = 18 + t * 165 + ring * 23;
-      const opacity = (0.13 * Math.pow(1 - t, 1.65)) / (ring + 1);
-      wavesContext.beginPath();
-      for (let i = 0; i <= 64; i++) {
-        const theta = (i / 64) * Math.PI * 2;
-        const uneven =
-          1 +
-          Math.sin(theta * 5 + wave.phase) * 0.038 +
-          Math.cos(theta * 3 - wave.phase) * 0.02;
-        const x = wave.x + Math.cos(theta) * radius * uneven;
-        const y = wave.y + Math.sin(theta) * radius * uneven;
-        if (i === 0) wavesContext.moveTo(x, y);
-        else wavesContext.lineTo(x, y);
-      }
-      wavesContext.strokeStyle = `rgba(223,191,151,${opacity.toFixed(4)})`;
-      wavesContext.lineWidth = 1.2;
-      wavesContext.stroke();
-    }
-  });
-  wavesFrame = waves.length ? requestAnimationFrame(drawWaves) : 0;
-}
-if (wavesContext) {
-  addEventListener("resize", () => {
-    wavesNeedResize = true;
-  });
-  hero.addEventListener(
-    "pointermove",
-    (event) => {
-      if (
-        !finePointer.matches ||
-        reduceMotion.matches ||
-        document.hidden ||
-        (event.pointerType && event.pointerType !== "mouse")
-      )
-        return;
-      const now = performance.now();
-      if (now - lastWave < 105) return;
-      if (wavesNeedResize) resizeWaves();
-      const rect = hero.getBoundingClientRect();
-      waves.push({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-        start: now,
-        phase: ((now % 900) / 900) * Math.PI * 2,
-      });
-      lastWave = now;
-      if (!wavesFrame) wavesFrame = requestAnimationFrame(drawWaves);
-    },
-    { passive: true },
-  );
-}
 reduceMotion.addEventListener("change", () => {
   stopHoverAdvance();
   cancelPhotoSlide();
-  if (reduceMotion.matches) {
-    stopPointerAnimation();
-    stopWaves();
-    hero.style.setProperty("--pointer-x", "0px");
-    hero.style.setProperty("--pointer-y", "0px");
-  } else schedulePointer();
-});
-finePointer.addEventListener("change", () => {
-  if (!finePointer.matches) {
-    stopPointerAnimation();
-    stopWaves();
-  }
-});
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    stopPointerAnimation();
-    stopWaves();
-  } else schedulePointer();
-});
-const heroObserver = new IntersectionObserver(([entry]) => {
-  heroVisible = entry.isIntersecting;
-  if (!heroVisible) stopWaves();
-  else schedulePointer();
-});
-heroObserver.observe(hero);
-
-/* Menú móvil */
-const menuButton = $("#menu-toggle");
-const mobileMenu = $("#mobile-menu");
-function toggleMobileMenu(force) {
-  const hadMenuFocus = mobileMenu.contains(document.activeElement);
-  const open =
-    typeof force === "boolean"
-      ? force
-      : menuButton.getAttribute("aria-expanded") !== "true";
-  menuButton.setAttribute("aria-expanded", String(open));
-  menuButton.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
-  mobileMenu.inert = !open;
-  document.body.classList.toggle("menu-is-open", open);
-  if (!open && hadMenuFocus && innerWidth <= 800)
-    menuButton.focus();
-}
-menuButton.addEventListener("click", () => toggleMobileMenu());
-$$("#mobile-menu a").forEach((link) =>
-  link.addEventListener("click", () => toggleMobileMenu(false)),
-);
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") toggleMobileMenu(false);
-});
-window.addEventListener("resize", () => {
-  if (innerWidth > 800) toggleMobileMenu(false);
 });
 
-/* Aparición discreta de bloques mientras entran en pantalla */
-const observer = new IntersectionObserver(
-  (entries) =>
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("in-view");
-        observer.unobserve(entry.target);
-      }
-    }),
-  { threshold: 0.08 },
-);
-$$(
-  ".intro-statement, .film-card, .about-grid, .contact h2",
-).forEach((el) => {
-  el.classList.add("scroll-reveal");
-  observer.observe(el);
-});
+
+
 
 renderYearFilters();
 renderArchivePage();

@@ -3,104 +3,97 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#10100f" />
+    <meta name="theme-color" content="#0b0707" />
     <meta
       name="description"
-      content="Portafolio de Benjamín Bravo. Dirección audiovisual, fotografía y archivo desde Santiago de Chile."
+      content="Benjamín Bravo. Cine y fotografía desde Santiago de Chile."
     />
-    <title>Benjamín Bravo — Dirección audiovisual y fotografía</title>
+    <title>Benjamín Bravo — Cine y fotografía</title>
+    <script>document.documentElement.classList.add("js");</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Italiana&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Encode+Sans+Condensed:wght@400;600;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=9657d5908e" />
+    <link rel="stylesheet" href="style.css" />
     <script src="colecciones.js" defer></script>
-    <script src="script.js?v=3538d4b4d8" defer></script>
+    <script src="peliculas.js" defer></script>
+    <script src="trayectoria.js" defer></script>
+    <script src="script.js" defer></script>
+    <script src="liquido.js" defer></script>
+    <script src="intro.js" defer></script>
+    <script src="secciones.js" defer></script>
+    <script src="cursor.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
-    <div class="cursor-halo" aria-hidden="true"></div>
+    <div class="cursor-mira" aria-hidden="true" data-estado="normal"></div>
 
-    <header class="site-header" id="inicio">
-      <a class="brand" href="#inicio" aria-label="Benjamín Bravo, ir al inicio"
-        >B<span class="brand-slash">/</span>B<span class="brand-dot">.</span></a
-      >
-      <nav class="desktop-nav" aria-label="Navegación principal">
-        <a href="#fotografia"><span>01</span> Fotografía</a>
-        <a href="#audiovisual"><span>02</span> Cine</a>
-        <a href="#sobre-mi"><span>03</span> Sobre mí</a>
-      </nav>
-      <div class="header-actions">
-        <a class="header-contact" href="mailto:benbravod@gmail.com"
-          >Contacto <span aria-hidden="true">↗</span></a
-        >
-        <button
-          class="menu-toggle"
-          id="menu-toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="mobile-menu"
-          aria-label="Abrir menú"
-        >
-          <span></span><span></span>
-        </button>
-      </div>
-      <nav class="mobile-menu" id="mobile-menu" aria-label="Menú móvil" inert>
-        <a href="#fotografia">Fotografía <span>01</span></a>
-        <a href="#audiovisual">Cine <span>02</span></a>
-        <a href="#sobre-mi">Sobre mí <span>03</span></a>
-        <a href="mailto:benbravod@gmail.com">Contacto <span>↗</span></a>
-      </nav>
+    <header class="site-header">
+      <a class="marca" href="#inicio" aria-label="Benjamín Bravo, volver al inicio">
+        <svg viewBox="0 0 24 34" aria-hidden="true" focusable="false">
+          <path d="M1.5 9s3.8-6.5 10.5-6.5S22.5 9 22.5 9 18.7 15.5 12 15.5 1.5 9 1.5 9Z" />
+          <circle cx="12" cy="9" r="3.5" />
+          <path d="M12 16v8" />
+          <path class="marca-gota" d="M12 23c-1 2.5-3.5 5-3.5 7.5a3.5 3.5 0 0 0 7 0c0-2.5-2.5-5-3.5-7.5Z" />
+        </svg>
+      </a>
     </header>
 
     <main id="contenido">
-      <section class="hero" aria-labelledby="hero-title" id="portada">
-        <div class="hero-ambient" aria-hidden="true"></div>
-        <canvas class="hero-waves" id="hero-waves" aria-hidden="true"></canvas>
-        <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
-        <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
-        <div class="hero-grid" aria-hidden="true"></div>
-        <div class="hero-light-veil" aria-hidden="true"></div>
-        <div class="hero-content">
-          <h1 id="hero-title" class="hero-title">
-            <span class="hero-title-first">Benjamín</span
-            ><span class="hero-title-second"
-              >Bravo<span class="hero-period">.</span></span
-            >
-          </h1>
-          <div class="hero-bottomline">
-            <a
-              class="round-arrow"
-              href="#fotografia"
-              aria-label="Explorar archivo fotográfico"
-              ><span aria-hidden="true">↓</span></a
-            >
+      <!-- TV y retrato: una sola sección bloqueada mientras se hace scroll -->
+      <section class="intro" id="inicio" aria-labelledby="nombre">
+        <div class="intro-escena">
+          <div class="retrato-capa">
+            <picture class="retrato-foto">
+              <source media="(max-width: 800px)" srcset="recursos/retrato-movil.jpg" />
+              <img src="recursos/retrato.jpg" alt="Retrato de Benjamín Bravo" />
+            </picture>
+            <div class="retrato-sombra" aria-hidden="true"></div>
+            <div class="retrato-texto">
+              <h1 id="nombre" class="nombre">Benjamín<br />Bravo</h1>
+              <p class="resumen">
+                [Resumen de 3 a 5 líneas: quién eres, desde dónde miras y qué te
+                interesa filmar y fotografiar. Este texto lo escribes tú y se
+                edita en index.html.]
+              </p>
+            </div>
+          </div>
+
+          <div class="tv-capa">
+            <div class="tv">
+              <div class="tv-zoom">
+                <div class="tv-pantalla" aria-hidden="true">
+                  <img class="tv-canal" src="DR-1.jpg" alt="" />
+                  <canvas class="tv-estatica" width="160" height="120"></canvas>
+                  <span class="tv-lineas"></span>
+                </div>
+                <img
+                  class="tv-cuerpo"
+                  src="recursos/tv.webp"
+                  srcset="recursos/tv-movil.webp 900w, recursos/tv.webp 2200w"
+                  sizes="(max-width: 800px) 92vw, 990px"
+                  alt=""
+                />
+                <div class="sticker sticker-perro" style="left:16.91%;top:73.75%;width:18.18%;--giro:-5deg"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 184"><g transform="translate(3 4)" opacity=".38"><rect x="3" y="3" width="274" height="178" rx="19" fill="#000"/></g><rect x="4" y="4" width="272" height="176" rx="18" fill="#f7f0e2"/><rect x="12" y="12" width="256" height="160" rx="8" fill="#efe6d2" stroke="#c42a1c" stroke-width="8"/><rect x="16" y="16" width="248" height="40" fill="#c42a1c"/><text x="140" y="47" text-anchor="middle" font-family="Encode Sans Condensed" font-weight="900" font-size="29" letter-spacing="2" fill="#efe6d2">¡CUIDADO!</text><g transform="translate(26 68) scale(.9)"><path d="M8 92 C6 70 10 50 22 40 L18 8 L38 30 C48 26 58 28 66 34 L92 40 L94 50 L70 54 L90 66 L88 72 C76 76 64 78 54 80 C48 86 44 90 42 96 Z" fill="#140807"/><circle cx="52" cy="41" r="3.6" fill="#efe6d2"/><path d="M73 53 L77 60 L80 52 Z M81 64 L84 58 L87 65 Z" fill="#efe6d2"/><path d="M14 82 L44 86 L42 95 L12 91 Z" fill="#c42a1c"/></g><text x="122" y="108" font-family="Encode Sans Condensed" font-weight="900" font-size="44" fill="#140807">PERRO</text><text x="122" y="152" font-family="Encode Sans Condensed" font-weight="900" font-size="44" fill="#140807">BRAVO</text></svg></div>
+                <div class="sticker sticker-diablo" style="left:13.64%;top:31.25%;width:9.82%;--giro:-12deg"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 224"><g transform="translate(3 4)" opacity=".38"><g fill="#000" stroke="#000" stroke-width="18" stroke-linejoin="round"><path d="M60 72 C62 50 158 50 160 72 C178 92 182 132 168 162 C156 192 132 208 110 210 C88 208 64 192 52 162 C38 132 42 92 60 72 Z"/><path d="M70 80 C46 62 30 32 42 8 C52 32 68 48 94 60 Z"/><path d="M150 80 C174 62 190 32 178 8 C168 32 152 48 126 60 Z"/></g></g><g fill="#f7f0e2" stroke="#f7f0e2" stroke-width="16" stroke-linejoin="round"><path d="M60 72 C62 50 158 50 160 72 C178 92 182 132 168 162 C156 192 132 208 110 210 C88 208 64 192 52 162 C38 132 42 92 60 72 Z"/><path d="M70 80 C46 62 30 32 42 8 C52 32 68 48 94 60 Z"/><path d="M150 80 C174 62 190 32 178 8 C168 32 152 48 126 60 Z"/></g><path d="M70 80 C46 62 30 32 42 8 C52 32 68 48 94 60 Z" fill="#efe6d2" stroke="#140807" stroke-width="4" stroke-linejoin="round"/><path d="M150 80 C174 62 190 32 178 8 C168 32 152 48 126 60 Z" fill="#efe6d2" stroke="#140807" stroke-width="4" stroke-linejoin="round"/><path d="M52 40 C60 46 70 52 80 56 M168 40 C160 46 150 52 140 56" stroke="#140807" stroke-width="2.4" fill="none" opacity=".6"/><path d="M60 72 C62 50 158 50 160 72 C178 92 182 132 168 162 C156 192 132 208 110 210 C88 208 64 192 52 162 C38 132 42 92 60 72 Z" fill="#c42a1c" stroke="#140807" stroke-width="5" stroke-linejoin="round"/><path d="M150 84 C170 110 170 160 140 196 C160 160 160 120 150 84 Z" fill="#140807" opacity=".3"/><path d="M64 92 L106 106 L102 116 L60 103 Z M156 92 L114 106 L118 116 L160 103 Z" fill="#140807"/><circle cx="84" cy="126" r="17" fill="#efe6d2" stroke="#140807" stroke-width="4"/><circle cx="88" cy="128" r="7" fill="#140807"/><circle cx="136" cy="126" r="17" fill="#efe6d2" stroke="#140807" stroke-width="4"/><circle cx="132" cy="128" r="7" fill="#140807"/><path d="M104 136 L110 148 L116 136" stroke="#140807" stroke-width="3.5" fill="none" stroke-linejoin="round"/><path d="M70 152 C90 160 130 160 150 152 C142 190 78 190 70 152 Z" fill="#140807"/><path d="M78 156 L83.5 166 L89 156 Z" fill="#efe6d2"/><path d="M89 156 L94.5 166 L100 156 Z" fill="#efe6d2"/><path d="M100 156 L105.5 166 L111 156 Z" fill="#efe6d2"/><path d="M111 156 L116.5 166 L122 156 Z" fill="#efe6d2"/><path d="M122 156 L127.5 166 L133 156 Z" fill="#efe6d2"/><path d="M133 156 L138.5 166 L144 156 Z" fill="#efe6d2"/><path d="M62 84 C70 74 82 70 92 72" stroke="#ff7a5c" stroke-width="5" fill="none" opacity=".75" stroke-linecap="round"/></svg></div>
+                <div class="sticker sticker-estrella" style="left:69.27%;top:31.87%;width:5.45%;--giro:8deg"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 156 156"><g transform="translate(3 4)" opacity=".38"><circle cx="78" cy="78" r="73" fill="#000"/></g><circle cx="78" cy="78" r="72" fill="#f7f0e2"/><circle cx="78" cy="78" r="64" fill="#c42a1c" stroke="#140807" stroke-width="5"/><circle cx="78" cy="78" r="52" fill="none" stroke="#efe6d2" stroke-width="2" stroke-dasharray="3 4" opacity=".8"/><path d="M78 32 L86.8 57.9 L114.1 58.3 L92.3 74.6 L100.3 100.7 L78 85 L55.7 100.7 L63.7 74.6 L41.9 58.3 L69.2 57.9 Z" fill="#efe6d2" stroke="#140807" stroke-width="3.2" stroke-linejoin="round"/><text x="78" y="124" text-anchor="middle" font-family="Encode Sans Condensed" font-weight="800" font-size="15" letter-spacing="3" fill="#efe6d2">CHILE</text></svg></div>
+                <div class="sticker sticker-copihue" style="left:68.91%;top:62.29%;width:6.36%;--giro:14deg"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 176 230"><g transform="translate(3 4)" opacity=".38"><g fill="#000" stroke="#000" stroke-width="18" stroke-linejoin="round"><path d="M92 74 C70 78 56 108 52 142 C50 162 48 180 40 200 L64 190 L86 208 L108 190 L134 198 C126 180 128 160 126 142 C122 108 112 80 92 74 Z"/><path d="M98 26 C120 6 150 8 162 18 C142 34 118 36 98 26 Z"/><path d="M96 30 C80 10 54 8 40 16 C58 32 80 36 96 30 Z"/><path d="M98 24 C116 40 108 60 92 76" fill="none" stroke-width="24"/></g></g><g fill="#f7f0e2" stroke="#f7f0e2" stroke-width="16" stroke-linejoin="round"><path d="M92 74 C70 78 56 108 52 142 C50 162 48 180 40 200 L64 190 L86 208 L108 190 L134 198 C126 180 128 160 126 142 C122 108 112 80 92 74 Z"/><path d="M98 26 C120 6 150 8 162 18 C142 34 118 36 98 26 Z"/><path d="M96 30 C80 10 54 8 40 16 C58 32 80 36 96 30 Z"/><path d="M98 24 C116 40 108 60 92 76" fill="none" stroke-width="22"/></g><path d="M98 24 C116 40 108 60 92 76" fill="none" stroke="#38452a" stroke-width="6" stroke-linecap="round"/><path d="M98 26 C120 6 150 8 162 18 C142 34 118 36 98 26 Z" fill="#38452a" stroke="#140807" stroke-width="3"/><path d="M100 26 C122 20 142 16 158 18" stroke="#6b7a52" stroke-width="2" fill="none"/><path d="M96 30 C80 10 54 8 40 16 C58 32 80 36 96 30 Z" fill="#38452a" stroke="#140807" stroke-width="3"/><path d="M94 30 C76 22 58 16 44 16" stroke="#6b7a52" stroke-width="2" fill="none"/><path d="M92 74 C70 78 56 108 52 142 C50 162 48 180 40 200 L64 190 L86 208 L108 190 L134 198 C126 180 128 160 126 142 C122 108 112 80 92 74 Z" fill="#c42a1c" stroke="#140807" stroke-width="4" stroke-linejoin="round"/><path d="M66 112 C60 140 58 168 54 190" stroke="#ff7a5c" stroke-width="7" fill="none" opacity=".7" stroke-linecap="round"/><path d="M92 78 C82 116 80 156 86 204 M92 78 C104 116 110 156 108 190" stroke="#140807" stroke-width="2.6" fill="none" opacity=".75"/><ellipse cx="70" cy="130" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="76" cy="150" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="66" cy="160" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="74" cy="172" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="100" cy="120" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="110" cy="146" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="104" cy="168" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><ellipse cx="116" cy="170" rx="2.6" ry="1.6" fill="#f6d2c2" opacity=".85"/><path d="M84 78 L92 64 L100 78 Z" fill="#38452a" stroke="#140807" stroke-width="2.5"/></svg></div>
+                <button class="tv-perilla" type="button" aria-label="Cambiar de canal"></button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="intro section-pad" aria-label="Introducción">
-        <div class="intro-grid">
-          <h2 class="intro-statement">placeholder</h2>
-        </div>
-      </section>
-
-      <section class="archive" id="fotografia" aria-labelledby="archive-title">
-        <div class="archive-head section-pad">
-          <h2 id="archive-title" class="archive-display-title">
-            Fotografías<span aria-hidden="true">.</span>
-          </h2>
-        </div>
-
+      <section class="archive" id="fotografia" aria-label="Fotografía">
         <div class="gallery-runway" id="gallery-runway">
           <div
             class="gallery-sticky"
             id="gallery-sticky"
             aria-label="Explorador de colecciones fotográficas"
           >
-            <div class="gallery-ambient" aria-hidden="true"></div>
             <div class="gallery-collage" id="gallery-collage">
               <div class="side-slot side-a" data-slot="0"></div>
               <div class="side-slot side-b" data-slot="1"></div>
@@ -193,23 +186,9 @@
                       aria-label="Fotografía anterior"
                     >
                       <span class="arrow-glyph" aria-hidden="true">←</span
-                      ><svg
-                        class="hold-ring"
-                        viewBox="0 0 64 64"
-                        aria-hidden="true"
-                      >
-                        <circle
-                          class="hold-ring-track"
-                          cx="32"
-                          cy="32"
-                          r="25"
-                        />
-                        <circle
-                          class="hold-ring-progress"
-                          cx="32"
-                          cy="32"
-                          r="25"
-                        />
+                      ><svg class="hold-ring" viewBox="0 0 64 64" aria-hidden="true">
+                        <circle class="hold-ring-track" cx="32" cy="32" r="25" />
+                        <circle class="hold-ring-progress" cx="32" cy="32" r="25" />
                       </svg>
                     </button>
                     <button
@@ -219,23 +198,9 @@
                       aria-label="Fotografía siguiente"
                     >
                       <span class="arrow-glyph" aria-hidden="true">→</span
-                      ><svg
-                        class="hold-ring"
-                        viewBox="0 0 64 64"
-                        aria-hidden="true"
-                      >
-                        <circle
-                          class="hold-ring-track"
-                          cx="32"
-                          cy="32"
-                          r="25"
-                        />
-                        <circle
-                          class="hold-ring-progress"
-                          cx="32"
-                          cy="32"
-                          r="25"
-                        />
+                      ><svg class="hold-ring" viewBox="0 0 64 64" aria-hidden="true">
+                        <circle class="hold-ring-track" cx="32" cy="32" r="25" />
+                        <circle class="hold-ring-progress" cx="32" cy="32" r="25" />
                       </svg>
                     </button>
                   </div>
@@ -260,9 +225,6 @@
                 </aside>
               </article>
             </div>
-            <div class="gallery-instructions micro">
-              <span>BENJAMÍN BRAVO</span>
-            </div>
             <p class="photo-navigation-hint">Para navegar, usar flechas o las teclas A/D</p>
           </div>
         </div>
@@ -273,36 +235,11 @@
             id="showcase-gallery"
             aria-label="Vista previa de cinco colecciones"
           >
-            <button
-              type="button"
-              class="showcase-card"
-              data-showcase="0"
-              aria-label="Ver colección"
-            ></button>
-            <button
-              type="button"
-              class="showcase-card"
-              data-showcase="1"
-              aria-label="Ver colección"
-            ></button>
-            <button
-              type="button"
-              class="showcase-card showcase-center"
-              data-showcase="2"
-              aria-label="Ampliar fotografía central"
-            ></button>
-            <button
-              type="button"
-              class="showcase-card"
-              data-showcase="3"
-              aria-label="Ver colección"
-            ></button>
-            <button
-              type="button"
-              class="showcase-card"
-              data-showcase="4"
-              aria-label="Ver colección"
-            ></button>
+            <button type="button" class="showcase-card" data-showcase="0" aria-label="Ver colección"></button>
+            <button type="button" class="showcase-card" data-showcase="1" aria-label="Ver colección"></button>
+            <button type="button" class="showcase-card showcase-center" data-showcase="2" aria-label="Ampliar fotografía central"></button>
+            <button type="button" class="showcase-card" data-showcase="3" aria-label="Ver colección"></button>
+            <button type="button" class="showcase-card" data-showcase="4" aria-label="Ver colección"></button>
           </div>
           <div class="showcase-toolbar">
             <div
@@ -311,25 +248,9 @@
               aria-label="Filtrar colecciones por año"
             ></div>
             <div class="showcase-pagination">
-              <button
-                type="button"
-                class="page-arrow"
-                id="page-prev"
-                aria-label="Página anterior"
-              >
-                ←
-              </button>
-              <span id="page-count" class="micro" aria-live="polite"
-                >01 / 01</span
-              >
-              <button
-                type="button"
-                class="page-arrow"
-                id="page-next"
-                aria-label="Página siguiente"
-              >
-                →
-              </button>
+              <button type="button" class="page-arrow" id="page-prev" aria-label="Página anterior">←</button>
+              <span id="page-count" class="micro" aria-live="polite">01 / 01</span>
+              <button type="button" class="page-arrow" id="page-next" aria-label="Página siguiente">→</button>
             </div>
           </div>
           <div
@@ -341,55 +262,60 @@
         </div>
       </section>
 
-      <section
-        class="films section-pad"
-        id="audiovisual"
-        aria-label="Cortometrajes"
-      >
-        <div class="film-grid">
-          <article class="film-card">
-            <div class="film-poster poster-one" aria-hidden="true"></div>
-            <div class="film-info">
-              <h3>Olmué</h3>
-            </div>
-          </article>
-          <article class="film-card">
-            <div class="film-poster poster-two" aria-hidden="true"></div>
-            <div class="film-info">
-              <h3>Señales de Radio</h3>
-            </div>
-          </article>
-        </div>
+      <section class="cine" id="cine" aria-label="Cine">
+        <div class="cine-peliculas" id="cine-peliculas"></div>
       </section>
 
-      <section
-        class="about section-pad"
-        id="sobre-mi"
-        aria-label="Sobre mí"
-      >
-        <div class="about-grid">
-          <div class="portrait-card">
-            <img
-              src="perfil.jpg"
-              alt="Retrato de Benjamín Bravo"
-              loading="lazy"
-            />
-          </div>
-        </div>
+      <section class="trayectoria" id="trayectoria" aria-label="Trayectoria">
+        <div
+          class="trayectoria-filtros"
+          id="trayectoria-filtros"
+          role="group"
+          aria-label="Filtrar por rol"
+        ></div>
+        <ol class="trayectoria-guia" id="trayectoria-guia"></ol>
       </section>
 
-      <section
-        class="contact section-pad"
-        id="contacto"
-        aria-labelledby="contact-title"
-      >
-        <h2 id="contact-title">placeholder</h2>
+      <section class="contacto" id="contacto" aria-labelledby="contacto-titulo">
+        <svg class="lampara" viewBox="0 0 160 130" aria-hidden="true" focusable="false">
+          <line x1="80" y1="0" x2="80" y2="62" />
+          <path class="lampara-casco" d="M44 62 L116 62 L132 118 L28 118 Z" />
+          <rect class="lampara-luz" x="30" y="112" width="100" height="16" rx="3" />
+        </svg>
+        <div class="contacto-sala">
+          <h2 id="contacto-titulo" class="contacto-titulo">Contacto</h2>
+          <form
+            class="contacto-form"
+            action="https://formsubmit.co/benbravod@gmail.com"
+            method="POST"
+          >
+            <label class="campo">
+              <span>Nombre</span>
+              <input name="nombre" type="text" autocomplete="name" required />
+            </label>
+            <label class="campo">
+              <span>Correo</span>
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label class="campo campo-mensaje">
+              <span>Mensaje</span>
+              <textarea name="mensaje" rows="5" required></textarea>
+            </label>
+            <input class="trampa" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <input type="hidden" name="_subject" value="Nuevo mensaje desde el portafolio" />
+            <input type="hidden" name="_template" value="table" />
+            <button class="contacto-enviar" type="submit">Enviar</button>
+            <p class="contacto-estado" role="status" aria-live="polite"></p>
+          </form>
+          <p class="contacto-directo">
+            <a href="mailto:benbravod@gmail.com">benbravod@gmail.com</a>
+          </p>
+        </div>
       </section>
     </main>
 
-    <footer class="footer micro">
-      <span>© 2026 BENJAMÍN BRAVO</span><a href="#inicio">VOLVER ARRIBA ↑</a
-      >
+    <footer class="pie">
+      <span>© 2026 Benjamín Bravo</span><span>Santiago de Chile</span>
     </footer>
   </body>
 </html>
