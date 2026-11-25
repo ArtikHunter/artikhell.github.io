@@ -27,6 +27,12 @@ class CollectionStateTests(unittest.TestCase):
         old_card = self.page.locator('.showcase-card[data-collection="0"]')
         self.assertEqual(old_card.locator("img").get_attribute("src"), first_photo)
 
+        # La portada late 1 s tras el intercambio. Mientras se mueve, Playwright reintenta el
+        # clic forzando scrollIntoView (fin, centro...) y sube la página a la zona de relevo,
+        # donde la portada se oculta a propósito: se espera a que termine el latido.
+        self.page.wait_for_function(
+            "!document.querySelector('.showcase-center').classList.contains('is-pulsing')"
+        )
         self.page.locator(".showcase-center").click()
         self.page.wait_for_function("Math.abs(galleryProgress - .44) < .002")
         self.page.locator("#next-photo").click()
