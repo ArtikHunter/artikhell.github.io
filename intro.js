@@ -135,6 +135,13 @@ function programarCanal() {
 }
 
 tvPerilla?.addEventListener("click", () => cambiarCanal(1));
+
+// El ojo de la esquina vuelve al inicio. Sin scroll suave global: una animación
+// de scroll en curso desviaría los saltos de las secciones guiadas por scroll.
+$(".marca")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  scrollTo({ top: 0, behavior: reduceMotion.matches ? "instant" : "smooth" });
+});
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) programarCanal();
 });

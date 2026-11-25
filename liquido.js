@@ -37,7 +37,7 @@ float ruido(vec2 p) {
 }
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
-  for (int i = 0; i < 5; i++) { v += a * ruido(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; }
+  for (int i = 0; i < 4; i++) { v += a * ruido(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; }
   return v;
 }
 void main() {
@@ -105,9 +105,9 @@ if (!prepararLiquido()) document.documentElement.classList.add("sin-webgl");
 
 function ajustarLienzo() {
   if (!programaLiquido) return;
-  // Media resolución: la tinta es difusa y así cuesta la cuarta parte.
-  const ancho = Math.max(2, Math.round(innerWidth * 0.5));
-  const alto = Math.max(2, Math.round(innerHeight * 0.5));
+  // 40 % de la resolución: la tinta es difusa y así cuesta una sexta parte.
+  const ancho = Math.max(2, Math.round(innerWidth * 0.4));
+  const alto = Math.max(2, Math.round(innerHeight * 0.4));
   if (lienzoLiquido.width !== ancho || lienzoLiquido.height !== alto) {
     lienzoLiquido.width = ancho;
     lienzoLiquido.height = alto;
@@ -115,9 +115,18 @@ function ajustarLienzo() {
   }
 }
 
+const LIQUIDO_INTERVALO = 1000 / 30;
+let ultimoCuadroLiquido = 0;
+
 function dibujarLiquido(ahora) {
   liquidoFrame = 0;
   if (!programaLiquido) return;
+  // La tinta se mueve lento: 30 cuadros por segundo bastan y alivian la GPU.
+  if (ahora - ultimoCuadroLiquido < LIQUIDO_INTERVALO - 1 && liquido.activo) {
+    liquidoFrame = requestAnimationFrame(dibujarLiquido);
+    return;
+  }
+  ultimoCuadroLiquido = ahora;
   ajustarLienzo();
   const quieto = reduceMotion.matches;
   liquido.tinta = quieto ? liquido.objetivo : lerp(liquido.tinta, liquido.objetivo, 0.08);
@@ -130,13 +139,15 @@ function dibujarLiquido(ahora) {
     liquidoFrame = requestAnimationFrame(dibujarLiquido);
 }
 
+const introLiquido = $("#inicio");
+
 function updateLiquido() {
-  let progresoIntro = 0;
-  try {
-    progresoIntro = introProgress;
-  } catch {
-    progresoIntro = 0;
-  }
+  // Se mide aquí mismo (no con introProgress) porque este módulo corre antes
+  // que intro.js en cada cuadro y leería el valor del cuadro anterior.
+  const rectIntro = introLiquido?.getBoundingClientRect();
+  const progresoIntro = rectIntro
+    ? clamp(-rectIntro.top / Math.max(1, rectIntro.height - innerHeight), 0, 1)
+    : 1;
   const cine = $("#cine");
   const cineTop = cine ? cine.getBoundingClientRect().top : Infinity;
   liquido.objetivo = tintaPara({
