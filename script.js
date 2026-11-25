@@ -1120,7 +1120,8 @@ function updateGalleryScroll() {
   sticky.classList.toggle("is-gallery-retiring", fade > 0.02);
   sticky.classList.toggle("is-handoff", shrink > 0.25);
   // Solo una imagen central se ve a cada lado del relevo, también al volver atrás.
-  const arrived = shrink >= 1;
+  // El scroll es entero: el progreso puede quedar a milésimas del final del relevo.
+  const arrived = shrink >= 0.999;
   sticky.classList.toggle("is-index-arrived", arrived);
   $("#archive-index").classList.toggle("is-awaiting-photo", !arrived);
   indexCenter.inert = !arrived;

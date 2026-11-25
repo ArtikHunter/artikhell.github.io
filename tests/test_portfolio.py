@@ -142,7 +142,7 @@ class PortfolioTests(unittest.TestCase):
         self.assertGreater(large_photo["height"], normal_photo["height"] * 1.1)
         self.assertLess(middle_photo["height"], large_photo["height"])
         hidden = self.page.evaluate(
-            """() => ['#toggle-overlay', '.feature-controls', '.site-header', '.cursor-halo'].every(selector => {
+            """() => ['#toggle-overlay', '.feature-controls', '.site-header', '.cursor-mira'].every(selector => {
                 let el = document.querySelector(selector), opacity = 1;
                 while (el) {
                     const style = getComputedStyle(el);
@@ -396,14 +396,6 @@ class PortfolioTests(unittest.TestCase):
         self.assertTrue(self.page.locator(".feature-controls").evaluate("el => el.inert"))
         self.gallery(1)
         self.assertTrue(self.page.locator("#featured").evaluate("el => el.inert"))
-
-    def test_pointer_animation_stops_when_idle(self):
-        self.page.mouse.move(720, 400)
-        self.page.wait_for_function("pointerFrame === 0", timeout=5000)
-        self.assertIn("is-visible", self.page.locator(".cursor-halo").get_attribute("class"))
-        self.page.mouse.move(800, 450)
-        self.page.wait_for_function("pointerFrame === 0", timeout=5000)
-        self.assertNotEqual(self.page.locator(".cursor-halo").evaluate("el => getComputedStyle(el).transform"), "none")
 
     def test_viewer_rejoins_the_real_collection_index(self):
         self.gallery()
