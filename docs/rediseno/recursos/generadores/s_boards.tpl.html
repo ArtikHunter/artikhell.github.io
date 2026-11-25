@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Síntesis — Revelado</title>
+<style>
+/*FONTS*/
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#cfccc6;padding:80px;display:flex;flex-direction:row;flex-wrap:wrap;gap:120px 80px;align-items:flex-start}
+img{display:block}
+.board{position:relative;overflow:hidden;flex:none}
+:root{--negro:#0b0707;--rojo:#c42a1c;--rojo-osc:#5e0e09;--crema:#efe6d2;--antorcha:#ff5c3c;--tinta:#140807}
+.bod{font-family:'Bodoni Moda',serif}
+.enc{font-family:'Encode Sans Condensed',sans-serif}
+.mono{font-family:'IBM Plex Mono',monospace}
+.abs{position:absolute}
+.red-btn{position:absolute;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#e0503a,#b3231a 62%,#7d150e);box-shadow:0 4px 0 #3a0805,0 0 0 1.5px #140807;color:#efe6d2;font:500 26px/64px 'IBM Plex Mono';text-align:center}
+
+/* ===================== PÁGINA ===================== */
+.page{width:1440px;height:5880px;background:#0b0707}
+.page section{position:absolute;left:0;width:1440px;overflow:hidden}
+.s-hero{top:0;height:900px;background:url(assets/s_hero_bg.jpg)}
+.s-hero .tv{position:absolute;left:225px;top:18px;width:990px;height:864px}
+.mark{position:absolute;left:48px;top:36px}
+.stk{position:absolute}
+.stk svg{width:100%;height:100%;display:block}
+
+.s-ret{top:900px;height:900px}
+.s-ret > img{position:absolute;left:0;top:0;width:1440px;height:900px}
+.s-ret .shade{position:absolute;left:0;top:0;width:1440px;height:900px;background:radial-gradient(110% 80% at 0% 100%,rgba(12,2,2,.82),rgba(12,2,2,0) 62%)}
+.s-ret h1{position:absolute;left:44px;bottom:104px;font:italic 900 168px/.8 'Bodoni Moda';letter-spacing:-.035em;color:#efe6d2}
+.s-ret .desc{position:absolute;left:52px;bottom:50px;font:600 17px/1 'Encode Sans Condensed';letter-spacing:.2em;text-transform:uppercase;color:rgba(239,230,210,.82)}
+
+.s-fot{top:1800px;height:980px;background:url(assets/s_fog_bg.jpg)}
+.s-fot .ph{position:absolute;top:150px;width:300px}
+.s-fot .ph img{width:300px;height:225px;object-fit:cover}
+.s-fot .ph .cap{margin-top:14px;font:italic 700 21px/1.1 'Bodoni Moda';color:#140807}
+.s-fot .trail{position:absolute;width:420px;height:300px}
+
+.s-cin{top:2780px;height:1000px;background:#0b0707 url(assets/s_negro.jpg)}
+.s-cin .lb{position:absolute;left:0;top:40px;width:1440px;height:602px}
+.s-cin .lb img{width:1440px;height:602px}
+.s-cin .lb .t{position:absolute;left:0;right:0;top:256px;text-align:center;font:600 74px/1 'Encode Sans Condensed';letter-spacing:.3em;padding-left:.3em;text-transform:uppercase;color:#efe6d2;text-shadow:0 2px 24px rgba(0,0,0,.5)}
+.s-cin .second{position:absolute;left:96px;top:722px;display:flex;align-items:center;gap:40px}
+.s-cin .second img{width:430px;height:180px;object-fit:cover}
+.s-cin .second b{font:italic 700 60px/1 'Bodoni Moda';color:#efe6d2}
+
+.s-cv{top:3780px;height:1200px;background:#0b0707 url(assets/s_negro.jpg);padding:110px 96px 0}
+.chips{display:flex;gap:10px;margin-bottom:34px}
+.chip{display:flex;align-items:center;gap:9px;padding:9px 13px 9px 10px;border-radius:30px;border:1px solid rgba(239,230,210,.22);font:500 12px/1 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase;color:#d9cfbc}
+.chip i{width:12px;height:12px;border-radius:50%;display:block}
+.chip.on{background:#efe6d2;color:#0b0707;border-color:#efe6d2}
+.r{display:grid;grid-template-columns:110px 200px 1fr 260px 40px;align-items:center;min-height:76px;border-top:1px solid rgba(239,230,210,.15)}
+.r .yr{font:500 14px/1 'IBM Plex Mono';color:#8c8278}
+.r .g{justify-self:start;font:600 11px/1 'IBM Plex Mono';letter-spacing:.12em;padding:7px 9px;border-radius:4px;text-transform:uppercase}
+.r .t{font:800 34px/1 'Encode Sans Condensed';text-transform:uppercase;color:#efe6d2}
+.r .w{font:500 12px/1.3 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase;color:#a89e8f}
+.r .pl{font:400 28px/1 'IBM Plex Mono';color:#8c8278;text-align:right}
+.r.open{background:rgba(239,230,210,.045)}
+.g.dir{background:#d7301f;color:#fff}.g.fot{background:#3fa7b5;color:#08201f}.g.ges{background:#c9b037;color:#1d1803}.g.cam{background:#b04a8f;color:#fff}
+.x{display:grid;grid-template-columns:110px 1fr;padding:10px 0 34px;background:rgba(239,230,210,.045);border-top:1px dashed rgba(239,230,210,.18)}
+.x .body{grid-column:2;display:flex;gap:34px;padding-top:22px}
+.x p{font:400 20px/1.5 'Encode Sans Condensed';color:#cfc5b2;max-width:440px}
+.x .imgs{display:flex;gap:12px}
+.x .imgs img{object-fit:cover}
+.x .poster{width:110px;height:142px;border:1px dashed rgba(239,230,210,.35);display:flex;align-items:center;justify-content:center;font:500 11px/1.3 'IBM Plex Mono';color:#8c8278;text-align:center}
+.lk{display:flex;gap:10px;margin-top:20px}
+.lk span{font:500 12px/1 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;padding:10px 12px;border:1px solid rgba(239,230,210,.35);border-radius:6px;color:#efe6d2}
+.lk span.main{background:#efe6d2;color:#0b0707;border-color:#efe6d2}
+
+.s-con{top:4980px;height:900px;background:url(assets/s_red_bg.jpg)}
+.s-con .fin{position:absolute;left:52px;top:40px;font:italic 900 360px/1 'Bodoni Moda';letter-spacing:-.04em;color:#efe6d2}
+.env{position:absolute;width:720px;height:400px;background:#efe6d2 url(assets/s_crema.jpg);box-shadow:0 2px 2px rgba(0,0,0,.25),0 30px 60px rgba(30,3,2,.45)}
+.env > img.air{position:absolute;left:0;top:0;width:100%;height:100%}
+.env .fold{position:absolute;left:0;right:0;top:0;height:200px;background:linear-gradient(rgba(80,50,30,0) 98%,rgba(80,50,30,.14) 99%,rgba(255,255,255,.6) 100%)}
+.env .sello{position:absolute;right:46px;top:40px;width:96px;height:118px;background:#f7f1e4;padding:7px;border:2px dotted #cbbd9f}
+.env .sello img{width:78px;height:96px;object-fit:cover}
+.env .pm{position:absolute;right:96px;top:82px;width:120px;height:120px;border:2px solid rgba(20,8,7,.7);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font:500 10px/1.5 'IBM Plex Mono';letter-spacing:.16em;color:rgba(20,8,7,.75);text-align:center}
+.env .pm i{display:block;width:96px;border-top:2px solid rgba(20,8,7,.6);border-bottom:2px solid rgba(20,8,7,.6);margin:5px 0;padding:3px 0;font-style:normal}
+.env .to{position:absolute;left:84px;top:176px}
+.env .to small{font:italic 400 24px/1 'Bodoni Moda';color:#140807}
+.env .to b{display:block;margin-top:12px;font:400 46px/1 'Bodoni Moda';color:#140807;letter-spacing:-.01em}
+.s-con .links{position:absolute;left:60px;top:760px;display:flex;gap:40px}
+.s-con .links span{font:600 17px/1 'Encode Sans Condensed';letter-spacing:.16em;text-transform:uppercase;color:#efe6d2;border-bottom:1.5px solid rgba(239,230,210,.7);padding-bottom:6px}
+.s-con .copy{position:absolute;right:56px;bottom:40px;font:500 11px/1 'IBM Plex Mono';letter-spacing:.12em;color:rgba(239,230,210,.55)}
+
+/* ===================== NOTAS ===================== */
+.notes{width:460px;height:5880px;background:#e9e6df;font-family:'IBM Plex Mono',monospace}
+.notes .n{position:absolute;left:24px;width:412px;background:#ffe95c;color:#151515;font:400 12.5px/1.55 'IBM Plex Mono';padding:14px 16px 15px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.notes .n b{display:block;font-weight:500;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase}
+.notes .n.rule{background:#151515;color:#ffe95c}
+.notes .sec{position:absolute;left:24px;font:500 11px/1 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#6b665d}
+
+/* ===================== CARGA ===================== */
+.load{width:1440px;height:900px;background:url(assets/s_load_bg.jpg)}
+.lamp{position:absolute}
+.pocket{position:absolute;overflow:hidden}
+.print{position:absolute;background:#f2ebdc;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.print img{object-fit:cover}
+.slit{position:absolute;height:12px;border-radius:6px;background:#020101;box-shadow:0 2px 0 rgba(255,92,60,.35),0 -1px 0 rgba(0,0,0,.9) inset}
+.timer{position:absolute;font:500 20px/1 'IBM Plex Mono';letter-spacing:.12em;color:#ff5c3c}
+
+/* ===================== MÓVIL ===================== */
+.mob{width:2664px;height:1030px;background:#e9e6df;padding:72px}
+.mob .row{display:flex;gap:36px}
+.phone{position:relative;width:390px;height:844px;border-radius:34px;overflow:hidden;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.phl{margin-top:16px;font:500 11px/1 'IBM Plex Mono';letter-spacing:.12em;text-transform:uppercase;color:#6b665d}
+
+/* ===================== CURSOR ===================== */
+.cur{width:1440px;height:930px;background:#e9e6df;padding:64px 72px}
+.cur h2,.mat h2{font:italic 900 64px/1 'Bodoni Moda';color:#140807;letter-spacing:-.02em}
+.cur .lede,.mat .lede{font:400 19px/1.5 'Encode Sans Condensed';color:#3b3632;max-width:860px;margin-top:14px}
+.cur .opts{display:grid;grid-template-columns:repeat(3,412px);gap:30px;margin-top:40px}
+.opt .scene{position:relative;width:412px;height:294px;background:#0b0707 url(assets/s_negro.jpg);overflow:hidden;border-radius:6px}
+.opt .scene img.tr{position:absolute;left:-4px;top:-3px;width:420px;height:300px}
+.opt h3{margin-top:18px;font:800 26px/1 'Encode Sans Condensed';text-transform:uppercase;color:#140807;display:flex;align-items:center;gap:10px}
+.opt h3 em{font:500 10px/1 'IBM Plex Mono';letter-spacing:.12em;background:#140807;color:#ffe95c;padding:5px 7px;font-style:normal}
+.opt p{margin-top:8px;font:400 16px/1.45 'Encode Sans Condensed';color:#3b3632}
+.states{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.states div{background:#0b0707;border-radius:6px;height:96px;position:relative}
+.states span{position:absolute;left:0;right:0;bottom:-20px;font:500 10px/1 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase;color:#6b665d;text-align:center}
+.states svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+
+/* ===================== MATERIALES ===================== */
+.mat{width:1440px;height:2150px;background:#e9e6df;padding:64px 72px}
+.mat .rule3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:34px}
+.mat .sw{height:220px;border-radius:6px;position:relative;padding:18px;display:flex;flex-direction:column;justify-content:flex-end}
+.mat .sw b{font:italic 900 40px/1 'Bodoni Moda'}
+.mat .sw span{font:500 12px/1.5 'IBM Plex Mono';letter-spacing:.06em;margin-top:8px}
+.mat .roles{display:flex;gap:10px;margin-top:16px;align-items:center}
+.mat .roles div{display:flex;align-items:center;gap:8px;font:500 12px/1 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;color:#3b3632;margin-right:14px}
+.mat .roles i{width:22px;height:22px;border-radius:4px;display:block}
+.mat .h3{font:500 12px/1 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:#6b665d;margin:44px 0 16px}
+.mat .rev{display:flex;align-items:center;gap:18px}
+.mat .rev img{width:300px;height:225px;object-fit:cover}
+.mat .rev i{font:400 30px/1 'IBM Plex Mono';color:#140807;font-style:normal}
+.mat .type div{display:flex;align-items:baseline;gap:24px;padding:12px 0;border-top:1px solid #cfc9bd}
+.mat .type small{font:500 11px/1.4 'IBM Plex Mono';letter-spacing:.08em;color:#6b665d;width:240px;flex:none}
+.mat .sheet{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap;background:#5e0e09 url(assets/s_rojo.jpg);padding:30px;border-radius:6px}
+</style>
+</head>
+<body>
+
+<!-- ===================== PÁGINA ESCRITORIO ===================== -->
+<div class="board page" id="p-desk">
+  <section class="s-hero">
+    <img class="tv" src="assets/s_tv.png">
+    {{TV_STICKERS}}
+    <svg class="mark" width="34" height="48" viewBox="0 0 24 34" fill="none" stroke="#efe6d2" stroke-width="1.4" stroke-linecap="round"><path d="M1.5 9s3.8-6.5 10.5-6.5S22.5 9 22.5 9 18.7 15.5 12 15.5 1.5 9 1.5 9Z"/><circle cx="12" cy="9" r="3.5"/><path d="M12 16v8"/><path d="M12 23c-1 2.5-3.5 5-3.5 7.5a3.5 3.5 0 0 0 7 0c0-2.5-2.5-5-3.5-7.5Z" fill="#efe6d2"/></svg>
+  </section>
+
+  <section class="s-ret">
+    <img src="assets/s_retrato.jpg">
+    <div class="shade"></div>
+    <h1>Benjamín<br>Bravo</h1>
+    <div class="desc">Cine y fotografía — Santiago de Chile</div>
+  </section>
+
+  <section class="s-fot">
+    <div class="ph" style="left:96px"><img src="assets/s_foto0.jpg"><div class="cap">Costra Cocida</div></div>
+    <div class="ph" style="left:414px"><img src="assets/s_foto1.jpg"><div class="cap">Sales Solubles</div></div>
+    <div class="ph" style="left:732px"><img src="assets/s_foto2.jpg"><div class="cap">Lluvia Pronosticada</div></div>
+    <div class="ph" style="left:1050px"><img src="assets/s_foto3_lat.jpg"><div class="cap">Salitre</div></div>
+    <div class="ph" style="left:1368px"><img src="assets/s_foto4.jpg"></div>
+    <div class="red-btn" style="left:1344px;top:420px">→</div>
+    <img class="trail" src="assets/s_trail_luz.png" style="left:270px;top:150px">
+    <svg class="abs" style="left:556px;top:250px" width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="#efe6d2" stroke-width="2"><circle cx="32" cy="32" r="26"/><path d="M32 2v10M32 52v10M2 32h10M52 32h10" stroke-linecap="round"/><circle cx="32" cy="32" r="2.5" fill="#ff5c3c" stroke="none"/></svg>
+  </section>
+
+  <section class="s-cin">
+    <div class="lb"><img src="assets/s_cine.jpg"><div class="t">Señales de Radio</div></div>
+    <div class="second"><img src="assets/s_cine2.jpg"><b>Olmué</b></div>
+    <div class="red-btn" style="left:1280px;top:780px">→</div>
+  </section>
+
+  <section class="s-cv">
+    <div class="chips"><span class="chip on">Todo</span><span class="chip"><i style="background:#d7301f"></i>Dirección</span><span class="chip"><i style="background:#3fa7b5"></i>Fotografía</span><span class="chip"><i style="background:#b04a8f"></i>Cámara</span><span class="chip"><i style="background:#c9b037"></i>Gestión cultural</span></div>
+    <div class="r open"><span class="yr">2026</span><span class="g dir">Dirección</span><span class="t">Señales de Radio</span><span class="w">Cortometraje</span><span class="pl">−</span></div>
+    <div class="x"><div class="body"><img src="assets/s_cv_film.jpg" style="width:320px;height:180px;object-fit:cover"><div><p>[Sinopsis en una línea. Festivales y selecciones, si las hay.]</p><div class="lk"><span class="main">Letterboxd ↗</span><span>TMDB ↗</span><span>Ficha →</span></div></div></div></div>
+    <div class="r"><span class="yr">2026</span><span class="g fot">Fotografía</span><span class="t">Juglaría en llamas</span><span class="w">Serie · Diablos Rojos</span><span class="pl">+</span></div>
+    <div class="r open"><span class="yr">2025</span><span class="g ges">Gestión cultural</span><span class="t">Muestra de cortometrajes</span><span class="w">[Lugar]</span><span class="pl">−</span></div>
+    <div class="x"><div class="body"><p>[Qué fue, dónde, con quién; cuántas películas y qué público.]</p><div class="imgs"><img src="assets/s_cv_arch0.jpg" style="width:190px;height:142px"><img src="assets/s_cv_arch1.jpg" style="width:190px;height:142px"><div class="poster">Afiche</div></div></div></div>
+    <div class="r"><span class="yr">2025</span><span class="g dir">Dirección</span><span class="t">Olmué</span><span class="w">Cortometraje</span><span class="pl">+</span></div>
+    <div class="r"><span class="yr">2025</span><span class="g fot">Fotografía</span><span class="t">Carnaval Diurno</span><span class="w">Serie · FECH</span><span class="pl">+</span></div>
+    <div class="r" style="border-bottom:1px solid rgba(239,230,210,.15)"><span class="yr">20—</span><span class="g cam">Cámara</span><span class="t">[Otro crédito]</span><span class="w">[Producción]</span><span class="pl">+</span></div>
+  </section>
+
+  <section class="s-con">
+    <div class="fin">Fin.</div>
+    <div class="env" style="left:600px;top:330px;transform:rotate(-4deg)">
+      <img class="air" src="assets/s_airmail.png">
+      <div class="fold"></div>
+      <div class="sello"><img src="assets/s_sello.jpg"></div>
+      <div class="pm">SANTIAGO<i>25 NOV 2026</i>CHILE</div>
+      <div class="to"><small>Benjamín Bravo</small><b>benbravod@gmail.com</b></div>
+      {{ENV_STICKER}}
+    </div>
+    <div class="links"><span>Instagram ↗</span><span>Letterboxd ↗</span><span>CV (PDF) ↓</span></div>
+    <div class="copy">© 2026</div>
+  </section>
+</div>
+
+<!-- ===================== NOTAS ===================== -->
+<div class="board notes" id="p-notes">
+  <div class="n rule" style="top:24px"><b>Principio</b>Nada de rótulos: sin títulos de sección, conteos ni instrucciones. Quien entra ya te conoce; las imágenes, el orden y el cursor dicen dónde está y qué se puede abrir.</div>
+  <div class="sec" style="top:190px">Encabezado</div>
+  <div class="n" style="top:214px"><b>TV (base para que lo modeles tú)</b>2D con contorno de tinta, trama tipo cómic, pinceladas y registro corrido (Arcane / Spider-Verse). Carpeta tejida, antena con papel aluminio y stickers originales: Perro Bravo, diablo, copihue, estrella. Al entrar se enciende con la línea del tubo; gira unos grados con el mouse; la perilla cambia de canal (fotos y fragmentos). Al bajar, la cámara entra a la pantalla y aparece el retrato.</div>
+  <div class="sec" style="top:920px">Retrato</div>
+  <div class="n" style="top:944px"><b>Solo nombre y una línea</b>Tu foto revelada en rojo (negro → rojo), como en Cuarto rojo. La línea es de muestra: escríbela tú.</div>
+  <div class="sec" style="top:1820px">Fotos</div>
+  <div class="n" style="top:1844px"><b>Selección + degradé</b>Cuatro fotos (una por colección) y una quinta cortada en el borde: invita a seguir sin decirlo. Cada foto abre su colección en el archivo; el botón rojo abre el archivo completo. Al entrar en pantalla, cada foto se revela: negro → rojo → color (la cuarta está a medio revelar). El fondo pasa de papel a niebla y a cuarto negro.</div>
+  <div class="n" style="top:2084px"><b>Cursor (opción A)</b>Sobre una foto el punto de luz se vuelve cuentahílos. Ver tablero «Cursor».</div>
+  <div class="sec" style="top:2800px">Cine</div>
+  <div class="n" style="top:2824px"><b>Formato ancho</b>Película destacada a todo el ancho, con el título como en una cartela; la segunda debajo. Sobre las películas el cursor es ▶. Fotogramas de muestra (tus fotos): se reemplazan por fotogramas reales.</div>
+  <div class="sec" style="top:3800px">Trayectoria</div>
+  <div class="n" style="top:3824px"><b>La guía de Señal abierta, sin título</b>Los chips de color son a la vez filtro y leyenda (salen de la carta de ajuste del TV). Cada fila se abre: películas con Letterboxd, TMDB y su ficha; gestión con fotos y afiche. Contenido de ejemplo.</div>
+  <div class="sec" style="top:5000px">Contacto</div>
+  <div class="n" style="top:5024px"><b>Fin. + el sobre</b>Mezcla de Cuarto rojo y Pliego. Click en el sobre: abre el correo; click en la dirección: la copia. El sticker «¡Al tiro!» responde a «¿cuándo me contestas?».</div>
+</div>
+
+<!-- ===================== CARGA ESCRITORIO ===================== -->
+<div class="board load" id="p-load">
+  {{LAMP_DESK}}
+  <div class="pocket" style="left:566px;top:240px;width:308px;height:400px">
+    <div class="print" style="left:0;top:118px"><img src="assets/s_carga.jpg" style="width:280px;height:350px"></div>
+  </div>
+  <div class="slit" style="left:380px;top:634px;width:680px"></div>
+  <div class="timer" style="left:0;right:0;top:690px;text-align:center">00:42</div>
+</div>
+
+<!-- ===================== MÓVIL ===================== -->
+<div class="board mob" id="p-mobile">
+  <div class="row">
+    <div><div class="phone" style="background:url(assets/s_m_load_bg.jpg)">
+      {{LAMP_MOB}}
+      <div class="pocket" style="left:85px;top:300px;width:220px;height:260px"><div class="print" style="left:0;top:66px;padding:10px"><img src="assets/s_m_carga.jpg" style="width:200px;height:250px"></div></div>
+      <div class="slit" style="left:40px;top:556px;width:310px;height:10px"></div>
+      <div class="timer" style="left:0;right:0;top:600px;text-align:center;font-size:16px">00:42</div>
+    </div><div class="phl">Carga</div></div>
+
+    <div><div class="phone" style="background:url(assets/s_m_hero_bg.jpg)">
+      <img src="assets/s_tv.png" style="position:absolute;left:20px;top:214px;width:350px;height:305px">
+      {{M_TV_STICKERS}}
+      <svg class="abs" style="left:22px;top:26px" width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#efe6d2" stroke-width="1.5" stroke-linecap="round"><path d="M1.5 9s3.8-6.5 10.5-6.5S22.5 9 22.5 9 18.7 15.5 12 15.5 1.5 9 1.5 9Z"/><circle cx="12" cy="9" r="3.5"/><path d="M12 16v8"/><path d="M12 23c-1 2.5-3.5 5-3.5 7.5a3.5 3.5 0 0 0 7 0c0-2.5-2.5-5-3.5-7.5Z" fill="#efe6d2"/></svg>
+      <img src="assets/s_m_retrato.jpg" style="position:absolute;left:0;top:776px;width:390px;height:844px">
+    </div><div class="phl">Encabezado</div></div>
+
+    <div><div class="phone">
+      <img src="assets/s_m_retrato.jpg" style="position:absolute;left:0;top:0;width:390px;height:844px">
+      <div style="position:absolute;left:0;right:0;bottom:0;height:420px;background:linear-gradient(rgba(12,2,2,0),rgba(12,2,2,.85))"></div>
+      <div style="position:absolute;left:18px;bottom:92px;font:italic 900 84px/.82 'Bodoni Moda';letter-spacing:-.035em;color:#efe6d2">Benjamín<br>Bravo</div>
+      <div style="position:absolute;left:22px;bottom:44px;font:600 12px/1 'Encode Sans Condensed';letter-spacing:.2em;text-transform:uppercase;color:rgba(239,230,210,.82)">Cine y fotografía — Santiago de Chile</div>
+    </div><div class="phl">Retrato</div></div>
+
+    <div><div class="phone" style="background:url(assets/s_fog_bg.jpg) -520px -40px">
+      <img src="assets/s_foto0.jpg" style="position:absolute;left:20px;top:90px;width:300px;height:225px;object-fit:cover">
+      <img src="assets/s_foto1.jpg" style="position:absolute;left:336px;top:90px;width:300px;height:225px;object-fit:cover">
+      <div style="position:absolute;left:20px;top:330px;font:italic 700 19px/1 'Bodoni Moda';color:#140807">Costra Cocida</div>
+      <div class="red-btn" style="left:306px;top:356px;width:52px;height:52px;line-height:52px;font-size:22px">→</div>
+      <div style="position:absolute;left:0;top:600px;width:390px;height:163px"><img src="assets/s_m_cine.jpg" style="width:390px;height:163px"><div style="position:absolute;left:0;right:0;top:66px;text-align:center;font:600 26px/1 'Encode Sans Condensed';letter-spacing:.3em;padding-left:.3em;text-transform:uppercase;color:#efe6d2">Señales de Radio</div></div>
+    </div><div class="phl">Fotos → cine</div></div>
+
+    <div><div class="phone" style="background:#0b0707 url(assets/s_negro.jpg);padding:80px 18px 0">
+      <div style="display:flex;gap:8px;margin-bottom:22px;width:600px"><span class="chip on">Todo</span><span class="chip"><i style="background:#d7301f"></i>Dirección</span><span class="chip"><i style="background:#3fa7b5"></i>Fotografía</span></div>
+      <div style="border-top:1px solid rgba(239,230,210,.15);padding:16px 0;background:rgba(239,230,210,.045)"><div style="display:flex;gap:10px;align-items:center"><span class="mono" style="font-size:12px;color:#8c8278">2026</span><span class="g dir" style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;padding:6px 8px;border-radius:4px;text-transform:uppercase;background:#d7301f;color:#fff">Dirección</span></div><div class="enc" style="font-weight:800;font-size:28px;line-height:1;text-transform:uppercase;color:#efe6d2;margin-top:10px">Señales de Radio</div>
+        <img src="assets/s_cv_film.jpg" style="width:354px;height:199px;object-fit:cover;margin-top:14px"><div class="lk" style="flex-wrap:wrap"><span class="main">Letterboxd ↗</span><span>TMDB ↗</span><span>Ficha →</span></div></div>
+      <div style="border-top:1px solid rgba(239,230,210,.15);padding:16px 0"><div style="display:flex;gap:10px;align-items:center"><span class="mono" style="font-size:12px;color:#8c8278">2026</span><span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;padding:6px 8px;border-radius:4px;text-transform:uppercase;background:#3fa7b5;color:#08201f">Fotografía</span></div><div class="enc" style="font-weight:800;font-size:28px;line-height:1;text-transform:uppercase;color:#efe6d2;margin-top:10px">Juglaría en llamas</div></div>
+      <div style="border-top:1px solid rgba(239,230,210,.15);padding:16px 0"><div style="display:flex;gap:10px;align-items:center"><span class="mono" style="font-size:12px;color:#8c8278">2025</span><span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;padding:6px 8px;border-radius:4px;text-transform:uppercase;background:#c9b037;color:#1d1803">Gestión cultural</span></div><div class="enc" style="font-weight:800;font-size:28px;line-height:1;text-transform:uppercase;color:#efe6d2;margin-top:10px">Muestra de cortometrajes</div></div>
+      <div style="border-top:1px solid rgba(239,230,210,.15);padding:16px 0"><div style="display:flex;gap:10px;align-items:center"><span class="mono" style="font-size:12px;color:#8c8278">2025</span><span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;padding:6px 8px;border-radius:4px;text-transform:uppercase;background:#d7301f;color:#fff">Dirección</span></div><div class="enc" style="font-weight:800;font-size:28px;line-height:1;text-transform:uppercase;color:#efe6d2;margin-top:10px">Olmué</div></div>
+    </div><div class="phl">Trayectoria</div></div>
+
+    <div><div class="phone" style="background:url(assets/s_m_red_bg.jpg)">
+      <div style="position:absolute;left:18px;top:40px;font:italic 900 170px/1 'Bodoni Moda';letter-spacing:-.04em;color:#efe6d2">Fin.</div>
+      <div class="env" style="left:30px;top:330px;width:330px;height:190px;transform:rotate(-4deg)">
+        <img class="air" src="assets/s_m_airmail.png">
+        <div class="sello" style="right:22px;top:20px;width:52px;height:64px;padding:4px"><img src="assets/s_sello.jpg" style="width:40px;height:52px"></div>
+        <div style="position:absolute;left:34px;top:86px"><div style="font:italic 400 14px/1 'Bodoni Moda';color:#140807">Benjamín Bravo</div><div style="margin-top:8px;font:400 23px/1 'Bodoni Moda';color:#140807">benbravod@gmail.com</div></div>
+      </div>
+      <div style="position:absolute;left:24px;top:600px;display:flex;flex-direction:column;gap:20px">
+        <span style="font:600 15px/1 'Encode Sans Condensed';letter-spacing:.16em;text-transform:uppercase;color:#efe6d2;border-bottom:1.5px solid rgba(239,230,210,.7);padding-bottom:6px;align-self:flex-start">Instagram ↗</span>
+        <span style="font:600 15px/1 'Encode Sans Condensed';letter-spacing:.16em;text-transform:uppercase;color:#efe6d2;border-bottom:1.5px solid rgba(239,230,210,.7);padding-bottom:6px;align-self:flex-start">Letterboxd ↗</span>
+        <span style="font:600 15px/1 'Encode Sans Condensed';letter-spacing:.16em;text-transform:uppercase;color:#efe6d2;border-bottom:1.5px solid rgba(239,230,210,.7);padding-bottom:6px;align-self:flex-start">CV (PDF) ↓</span>
+      </div>
+    </div><div class="phl">Contacto</div></div>
+  </div>
+</div>
+
+<!-- ===================== CURSOR ===================== -->
+<div class="board cur" id="p-cursor">
+  <h2>Cursor y rastro</h2>
+  <p class="lede">El cursor reemplaza a los rótulos: cambia de forma sobre lo que se puede abrir. Las tres opciones comparten estados (foto, película, enlace); cambia el rastro. Con «reducir movimiento» activado, el rastro se apaga.</p>
+  <div class="opts">
+    <div class="opt">
+      <div class="scene"><img class="tr" src="assets/s_trail_luz.png">
+        <svg class="abs" style="left:300px;top:114px" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#ff5c3c" opacity=".25"/><circle cx="18" cy="18" r="6" fill="#ff5c3c"/><circle cx="16.5" cy="16.5" r="2" fill="#ffe8dc"/></svg></div>
+      <h3>A · Luz de seguridad <em>Recomendada</em></h3>
+      <p>Un punto de luz roja que deja una estela con trama, como el halo del TV. Es el revelado hecho cursor: donde pasa la luz, aparece algo.</p>
+      <div class="states">
+        <div><svg width="30" height="30" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="#ff5c3c" opacity=".25"/><circle cx="18" cy="18" r="6" fill="#ff5c3c"/></svg><span>Normal</span></div>
+        <div><svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="#efe6d2" stroke-width="2"><circle cx="32" cy="32" r="24"/><path d="M32 4v10M32 50v10M4 32h10M50 32h10" stroke-linecap="round"/><circle cx="32" cy="32" r="2.5" fill="#ff5c3c" stroke="none"/></svg><span>Foto</span></div>
+        <div><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="none" stroke="#efe6d2" stroke-width="2"/><path d="M17 13 L31 22 L17 31 Z" fill="#ff5c3c"/></svg><span>Película</span></div>
+        <div><svg width="40" height="28" viewBox="0 0 24 17" fill="none" stroke="#efe6d2" stroke-width="1.4"><path d="M1.5 8.5s3.8-6.5 10.5-6.5 10.5 6.5 10.5 6.5-3.8 6.5-10.5 6.5S1.5 8.5 1.5 8.5Z"/><circle cx="12" cy="8.5" r="3.4" fill="#ff5c3c" stroke="none"/></svg><span>Enlace</span></div>
+      </div>
+    </div>
+    <div class="opt">
+      <div class="scene"><img class="tr" src="assets/s_trail_fosforo.png">
+        <svg class="abs" style="left:300px;top:114px" width="36" height="36" viewBox="0 0 36 36" stroke="#efe6d2" stroke-width="1.5"><path d="M18 4v10M18 22v10M4 18h10M22 18h10"/><circle cx="18" cy="18" r="2" fill="#ff5c3c" stroke="none"/></svg></div>
+      <h3>B · Fósforo</h3>
+      <p>Una mira fina que deja una línea que se apaga lento, como la persistencia del fósforo en un tubo. Más técnica y discreta; conversa con el TV.</p>
+      <div class="states">
+        <div><svg width="30" height="30" viewBox="0 0 36 36" stroke="#efe6d2" stroke-width="1.5"><path d="M18 4v10M18 22v10M4 18h10M22 18h10"/><circle cx="18" cy="18" r="2" fill="#ff5c3c" stroke="none"/></svg><span>Normal</span></div>
+        <div><svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#ff5c3c" stroke-width="2.2"><path d="M2 12V2h12M42 2h12v10M54 32v10H42M14 42H2V32"/></svg><span>Foto</span></div>
+        <div><svg width="44" height="44" viewBox="0 0 44 44"><path d="M15 11 L33 22 L15 33 Z" fill="none" stroke="#ff5c3c" stroke-width="2"/></svg><span>Película</span></div>
+        <div><svg width="44" height="20" viewBox="0 0 44 20"><path d="M2 16h40" stroke="#ff5c3c" stroke-width="2"/><path d="M2 10h40" stroke="#efe6d2" stroke-width="1" opacity=".5"/></svg><span>Enlace</span></div>
+      </div>
+    </div>
+    <div class="opt">
+      <div class="scene"><img class="tr" src="assets/s_trail_tinta.png">
+        <svg class="abs" style="left:306px;top:108px" width="28" height="40" viewBox="0 0 28 40"><path d="M14 2C11 10 3 18 3 27a11 11 0 0 0 22 0C25 18 17 10 14 2Z" fill="#efe6d2" stroke="#140807" stroke-width="1.5"/></svg></div>
+      <h3>C · Tinta</h3>
+      <p>Una gota que deja una pincelada crema con trama roja que se seca. La más expresiva y la más cercana al TV pintado; también la más ruidosa.</p>
+      <div class="states">
+        <div><svg width="22" height="32" viewBox="0 0 28 40"><path d="M14 2C11 10 3 18 3 27a11 11 0 0 0 22 0C25 18 17 10 14 2Z" fill="#efe6d2"/></svg><span>Normal</span></div>
+        <div><svg width="56" height="56" viewBox="0 0 56 56"><path d="M28 4c10 0 22 8 23 20 2 14-10 27-24 27C13 51 4 41 5 27 6 14 17 4 28 4Z" fill="none" stroke="#efe6d2" stroke-width="3" stroke-dasharray="20 4 3 4"/></svg><span>Foto</span></div>
+        <div><svg width="44" height="44" viewBox="0 0 44 44"><path d="M15 11 L33 22 L15 33 Z" fill="#efe6d2"/></svg><span>Película</span></div>
+        <div><svg width="44" height="20" viewBox="0 0 44 20"><path d="M2 14c8-6 14 4 22-2s12 2 18-2" stroke="#efe6d2" stroke-width="3" fill="none" stroke-linecap="round"/></svg><span>Enlace</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MATERIALES ===================== -->
+<div class="board mat" id="p-mat">
+  <h2>Revelado</h2>
+  <p class="lede">La idea que ordena la amalgama: todo aparece desde la oscuridad. El negro es el cuarto; el rojo es la luz que revela (luz de seguridad, brillo del tubo, fuego de los Diablos); el crema es el papel donde queda la imagen. El TV, las fotos, el cine, la trayectoria y el sobre son objetos dentro de ese cuarto.</p>
+  <div class="rule3">
+    <div class="sw" style="background:#0b0707 url(assets/s_negro.jpg);color:#efe6d2"><b>El cuarto</b><span>Negro #0B0707 · grano, polvo y pelusas de película</span></div>
+    <div class="sw" style="background:#9b1b12 url(assets/s_rojo.jpg);color:#efe6d2"><b>La luz</b><span>Rojo #C42A1C · antorcha #FF5C3C · trama de cómic</span></div>
+    <div class="sw" style="background:#efe6d2 url(assets/s_crema.jpg);color:#140807"><b>El papel</b><span>Crema #EFE6D2 · fibras de papel</span></div>
+  </div>
+  <div class="roles"><div><i style="background:#d7301f"></i>Dirección</div><div><i style="background:#3fa7b5"></i>Fotografía</div><div><i style="background:#b04a8f"></i>Cámara</div><div><i style="background:#c9b037"></i>Gestión cultural</div><div style="color:#6b665d;text-transform:none;letter-spacing:0">← colores de la carta de ajuste: solo viven en el TV y en la trayectoria</div></div>
+
+  <div class="h3">El revelado (pantalla de carga y cada foto al aparecer)</div>
+  <div class="rev"><img src="assets/s_demo1.jpg"><i>→</i><img src="assets/s_demo2.jpg"><i>→</i><img src="assets/s_demo0.jpg"></div>
+
+  <div class="h3">Tipografía</div>
+  <div class="type">
+    <div><small>Bodoni Moda · cursiva negra<br>nombre, títulos, «Fin.»</small><span style="font:italic 900 64px/1 'Bodoni Moda';color:#140807">Benjamín Bravo</span></div>
+    <div><small>Encode Sans Condensed<br>trayectoria, cartelas, enlaces</small><span style="font:800 44px/1 'Encode Sans Condensed';text-transform:uppercase;color:#140807">Señales de Radio</span></div>
+    <div style="border-bottom:1px solid #cfc9bd"><small>IBM Plex Mono<br>años, roles, datos</small><span style="font:500 22px/1 'IBM Plex Mono';color:#140807;letter-spacing:.08em">2026 · DIRECCIÓN · 00:42</span></div>
+  </div>
+
+  <div class="h3">Stickers (originales, vectoriales y editables)</div>
+  <div class="sheet">{{STICKER_SHEET}}</div>
+
+  <div class="h3">TV en vector (para modelar encima)</div>
+  <div style="display:flex;gap:40px;align-items:flex-start">
+    <div style="width:620px;height:541px;background:#0b0707 url(assets/s_negro.jpg);border-radius:6px;position:relative">{{TV_VEC}}</div>
+    <p class="lede" style="max-width:520px;margin-top:0">Capas separadas: casco, tapa, costado con trama y achurado, frente con pinceladas, marco, pantalla, perillas, parlante, placa «B·B», carpeta tejida y antena con papel aluminio. En la portada se usa una versión rasterizada con textura de papel y pincel encima. Referencias para tu modelado: Arcane (texturas pintadas sobre 3D) y Spider-Verse (trama, contorno y registro corrido).</p>
+  </div>
+</div>
+
+</body>
+</html>

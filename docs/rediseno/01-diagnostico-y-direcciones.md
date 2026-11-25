@@ -1,5 +1,7 @@
 # Rediseño — diagnóstico y direcciones visuales
 
+> Superado por [`02-sintesis-revelado.md`](02-sintesis-revelado.md): se conserva como historial.
+
 Primera etapa del rediseño: diagnóstico del sitio actual y tres direcciones visuales para elegir **antes** de tocar el código. Todavía no se ha modificado ningún archivo del sitio.
 
 **Figma:** https://www.figma.com/design/Ln30OsRkhUMcGoTd4unp8i — página «Rediseño — exploración», 8 tableros:
