@@ -276,3 +276,79 @@ function updateEstatica() {
 
 renderTrayectoria();
 enCadaScroll.push(updateEstatica);
+
+/* ---------------- Contacto ---------------- */
+const seccionContacto = $("#contacto");
+const formularioContacto = $(".contacto-form");
+const estadoContacto = $(".contacto-estado");
+const botonEnviar = $(".contacto-enviar");
+
+// FormSubmit recibe envíos con JavaScript en /ajax/<correo>; el formulario sin JS usa la ruta normal.
+function urlAjax(accion) {
+  const destino = new URL(accion);
+  return `${destino.origin}/ajax${destino.pathname}`;
+}
+
+function correoDestino() {
+  return decodeURIComponent(new URL(formularioContacto.action).pathname.slice(1));
+}
+
+function mostrarEstado(texto) {
+  estadoContacto.replaceChildren(texto);
+}
+
+function mostrarErrorContacto() {
+  const enlace = document.createElement("a");
+  enlace.href = `mailto:${correoDestino()}`;
+  enlace.textContent = correoDestino();
+  estadoContacto.replaceChildren("No se pudo enviar. Escríbeme directo a ", enlace, ".");
+}
+
+formularioContacto?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!formularioContacto.checkValidity()) {
+    formularioContacto.reportValidity();
+    return;
+  }
+  const datos = Object.fromEntries(new FormData(formularioContacto));
+  const trampa = datos._honey;
+  delete datos._honey;
+  if (trampa) {
+    // Un robot llenó el campo oculto: se le muestra éxito sin enviar nada.
+    formularioContacto.reset();
+    mostrarEstado("Mensaje enviado. Te respondo pronto.");
+    return;
+  }
+  botonEnviar.disabled = true;
+  mostrarEstado("Enviando…");
+  try {
+    const respuesta = await fetch(urlAjax(formularioContacto.action), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(datos),
+    });
+    const resultado = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok || String(resultado.success) !== "true") throw new Error("envío rechazado");
+    formularioContacto.reset();
+    formularioContacto.classList.remove("enviado");
+    void formularioContacto.offsetWidth;
+    formularioContacto.classList.add("enviado");
+    mostrarEstado("Mensaje enviado. Te respondo pronto.");
+  } catch {
+    mostrarErrorContacto();
+  } finally {
+    botonEnviar.disabled = false;
+  }
+});
+
+// Se enciende la luz de seguridad: la sala roja aparece desde la lámpara.
+function updateContacto() {
+  if (!seccionContacto) return;
+  const posicion = seccionContacto.getBoundingClientRect().top / innerHeight;
+  const luz = reduceMotion.matches ? 1 : smoothstep(0.95, 0.3, posicion);
+  seccionContacto.style.setProperty("--luz", String(+luz.toFixed(4)));
+  if (luz > 0.02) seccionContacto.classList.add("encendida");
+}
+
+enCadaScroll.push(updateContacto);
+scheduleScroll();

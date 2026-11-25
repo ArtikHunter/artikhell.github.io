@@ -1235,3 +1235,17 @@ main, .pie { position: relative; z-index: 1; }
   .js .entrada .fila, .js .entrada.visible .fila { clip-path: none; animation: none; }
   .estatica { display: none; }
 }
+
+/* ================= Contacto: la sala roja se enciende ================= */
+.contacto { --luz: 0; }
+.contacto-sala { clip-path: circle(calc(var(--luz) * 150%) at 50% 0%); }
+.contacto.encendida .contacto-sala { animation: parpadeo .6s steps(1) both; }
+@keyframes parpadeo { 0% { opacity: .2; } 20% { opacity: 1; } 35% { opacity: .45; } 55%, 100% { opacity: 1; } }
+.contacto-titulo { font-size: clamp(56px, 9vw, 160px); }
+.contacto-form.enviado { animation: enviado .8s var(--ease); }
+@keyframes enviado { 0% { transform: translateY(0); } 35% { transform: translateY(14px) rotate(-.6deg); } 100% { transform: none; } }
+.contacto-estado a { color: var(--rojo); }
+@media (prefers-reduced-motion: reduce) {
+  .contacto-sala { clip-path: none; }
+  .contacto.encendida .contacto-sala, .contacto-form.enviado { animation: none; }
+}

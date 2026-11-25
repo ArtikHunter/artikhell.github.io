@@ -486,6 +486,54 @@ class PortfolioTests(unittest.TestCase):
         self.page.evaluate(mover, 1.3)
         self.page.wait_for_function(f"{opacidad} < .01")
 
+    def test_contact_form_sends_and_reports(self):
+        envios = []
+        estado = {"codigo": 200}
+
+        def responder(route):
+            envios.append(route.request)
+            route.fulfill(status=estado["codigo"], content_type="application/json",
+                          body='{"success":"true","message":"ok"}' if estado["codigo"] == 200 else '{"success":"false"}')
+
+        self.page.route("https://formsubmit.co/**", responder)
+        self.page.locator(".contacto-form").scroll_into_view_if_needed()
+        enviar = self.page.locator(".contacto-enviar")
+        enviar.click()
+        self.page.wait_for_timeout(200)
+        self.assertEqual(envios, [], "Un formulario vacío no se envía")
+
+        def completar():
+            self.page.fill("input[name=nombre]", "Ana")
+            self.page.fill("input[name=email]", "ana@example.com")
+            self.page.fill("textarea[name=mensaje]", "Hola")
+
+        completar()
+        enviar.click()
+        self.page.wait_for_function("document.querySelector('.contacto-estado').textContent.includes('Mensaje enviado')")
+        self.assertEqual(len(envios), 1)
+        self.assertEqual(envios[0].url, "https://formsubmit.co/ajax/benbravod@gmail.com")
+        cuerpo = envios[0].post_data_json
+        self.assertEqual((cuerpo["nombre"], cuerpo["email"], cuerpo["mensaje"]), ("Ana", "ana@example.com", "Hola"))
+        self.assertNotIn("_honey", cuerpo)
+        self.assertEqual(self.page.input_value("input[name=nombre]"), "")
+        self.assertFalse(enviar.is_disabled())
+
+        estado["codigo"] = 500
+        completar()
+        enviar.click()
+        self.page.wait_for_function("document.querySelector('.contacto-estado a[href=\"mailto:benbravod@gmail.com\"]') !== null")
+        self.assertEqual(self.page.input_value("input[name=nombre]"), "Ana", "Un error no borra lo escrito")
+
+    def test_contact_room_lights_up_from_the_lamp(self):
+        luz = "getComputedStyle(document.querySelector('#contacto')).getPropertyValue('--luz').trim()"
+        mover = """f => { const seccion = document.querySelector('#contacto');
+            scrollTo({top: seccion.getBoundingClientRect().top + scrollY - innerHeight * f, behavior: 'instant'}); }"""
+        self.page.evaluate(mover, 0.98)
+        self.page.wait_for_timeout(120)
+        self.assertEqual(self.page.evaluate(luz), "0")
+        self.page.evaluate(mover, 0.2)
+        self.page.wait_for_function(f"{luz} === '1'")
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
