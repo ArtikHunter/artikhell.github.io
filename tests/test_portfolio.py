@@ -95,6 +95,16 @@ class PortfolioTests(unittest.TestCase):
                 if intento == 3:
                     raise
 
+    def nuevo_contexto(self, **opciones):
+        self.context.close()
+        self.context = self.browser.new_context(**{"viewport": {"width": 1440, "height": 900}, **opciones})
+        self.page = self.context.new_page()
+        self.page.on("pageerror", lambda error: self.errors.append(str(error)))
+        self.page.route("**/*", lambda route: route.continue_()
+                        if urlsplit(route.request.url).hostname == "127.0.0.1" else route.abort())
+        self.page.goto(self.base_url, wait_until="networkidle")
+        self.esperar_carga()
+
     def intro(self, progress):
         self.page.evaluate(
             """p => {
@@ -167,14 +177,10 @@ class PortfolioTests(unittest.TestCase):
         )
         self.assertTrue(hidden, "Only the photograph and its outside navigation hint should remain visible")
         self.assertEqual(self.page.locator("#tear-trigger").evaluate("el => getComputedStyle(el).cursor"), "none")
+        # Sin indicaciones visibles: la ayuda de navegación queda para lectores de pantalla.
         hint = self.page.locator(".photo-navigation-hint")
-        self.assertEqual(hint.inner_text(), "Para navegar, usar flechas o las teclas A/D")
-        self.assertTrue(hint.is_visible())
-        self.assertGreaterEqual(hint.evaluate("el => parseFloat(getComputedStyle(el).fontSize)"), 13)
-        photo = self.page.locator("#featured-image-full").bounding_box()
-        note = hint.bounding_box()
-        overlap = min(photo["x"] + photo["width"], note["x"] + note["width"]) - max(photo["x"], note["x"])
-        self.assertLessEqual(overlap, 1, "Navigation hint must stay beside the photograph")
+        self.assertEqual(hint.text_content(), "Para navegar, usar flechas o las teclas A/D")
+        self.assertLessEqual(hint.evaluate("el => el.getBoundingClientRect().width"), 1)
         source = self.page.locator("#featured-image").get_attribute("src")
         self.page.keyboard.press("d")
         self.assertNotEqual(self.page.locator("#featured-image").get_attribute("src"), source)
@@ -390,6 +396,30 @@ class PortfolioTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate("document.documentElement.classList.contains('sin-webgl')"))
         self.assertIn("liquido.jpg", self.page.locator("#liquido").evaluate("el => getComputedStyle(el).backgroundImage"))
 
+    def test_side_photos_float_and_turn(self):
+        self.gallery(0.02)
+        flotan = self.page.locator(".side-image").evaluate_all(
+            "els => els.map(el => el.getAnimations().some(a => a.animationName === 'flotar'))")
+        self.assertTrue(flotan)
+        self.assertTrue(all(flotan))
+        self.page.locator(".side-slot").first.hover()
+        self.page.wait_for_function("document.querySelector('.side-slot').classList.contains('is-girando')")
+
+    def test_reduced_motion_photos_stay_still(self):
+        self.nuevo_contexto(reduced_motion="reduce")
+        self.gallery(0.02)
+        self.assertTrue(self.page.locator(".side-image").evaluate_all(
+            "els => els.length > 0 && els.every(el => el.getAnimations().length === 0)"))
+
+    def test_collection_index_has_no_counts_or_numbers(self):
+        self.archive()
+        filas = self.page.locator(".collection-row").evaluate_all("els => els.map(el => el.innerText)")
+        self.assertTrue(filas)
+        for fila in filas:
+            with self.subTest(fila=fila):
+                self.assertNotRegex(fila, r"\bfotos\b")
+                self.assertNotRegex(fila, r"^\s*\d{2}\b")
+
     def test_catalog_and_resources(self):
         catalog = self.page.evaluate("colecciones")
         self.assertTrue(catalog)
@@ -590,6 +620,8 @@ class PortfolioTests(unittest.TestCase):
         self.page.add_style_tag(content="""
             .featured-lower, .eye-control, .fullscreen-specs, .gallery-instructions,
             .site-header, #archive-index { visibility:hidden !important; }
+            .featured-image-wrap::after { display:none !important; }
+            #featured-image-full { animation:none !important; filter:none !important; }
         """)
         for width, height in ((1440, 900), (390, 844)):
             self.page.set_viewport_size({"width": width, "height": height})
@@ -614,6 +646,8 @@ class PortfolioTests(unittest.TestCase):
         self.page.add_style_tag(content="""
             .featured-lower, .eye-control, .fullscreen-specs, .gallery-instructions,
             .site-header, #archive-index { visibility:hidden !important; }
+            .featured-image-wrap::after { display:none !important; }
+            #featured-image-full { animation:none !important; filter:none !important; }
         """)
         self.assert_single_photo_pixels()
 

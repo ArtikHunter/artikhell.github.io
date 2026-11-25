@@ -576,10 +576,10 @@ function renderArchivePage() {
     btn.className = "collection-row";
     btn.dataset.collection = String(index);
     btn.setAttribute("aria-pressed", String(serieActual === index));
-    btn.innerHTML = `<span class="micro">${pad(archivePage * PAGE_SIZE + position + 1)}</span><strong></strong><span class="collection-meta micro"></span><span class="collection-arrow" aria-hidden="true">↗</span>`;
+    // Sin numeración ni conteos: el título y el subtítulo bastan.
+    btn.innerHTML = `<strong></strong><span class="collection-meta micro"></span><span class="collection-arrow" aria-hidden="true">↗</span>`;
     btn.querySelector("strong").textContent = serie.titulo;
-    btn.querySelector(".collection-meta").textContent =
-      `${serie.subtitulo} · ${serie.fotos.length} fotos`;
+    btn.querySelector(".collection-meta").textContent = serie.subtitulo;
     btn.addEventListener("click", () => {
       btn.classList.add("is-flashing");
       setTimeout(() => btn.classList.remove("is-flashing"), 1150);
@@ -986,6 +986,14 @@ const siteHeader = $(".site-header");
 
 let galleryProgress = 0;
 const sideSlots = $$(".side-slot");
+// Al pasar el mouse, la copia gira sobre su eje como si flotara en el revelador.
+sideSlots.forEach((slot) => {
+  slot.addEventListener("pointerenter", (event) => {
+    if (event.pointerType !== "mouse" || reduceMotion.matches) return;
+    slot.classList.add("is-girando");
+  });
+  slot.addEventListener("pointerleave", () => slot.classList.remove("is-girando"));
+});
 const SIDE_LAYOUTS = {
   mobile: [
     [0.015, 0.25, 0.225, 0.31, -1, -0.15],
@@ -1196,3 +1204,15 @@ renderArchivePage();
 showPhoto({ animate: false });
 scheduleScroll();
 
+
+// Las copias laterales se revelan (negro → rojo → color) la primera vez que se ve la galería.
+const observadorRevelado = new IntersectionObserver(
+  ([entrada]) => {
+    if (!entrada.isIntersecting || reduceMotion.matches) return;
+    sticky.classList.add("revelando");
+    observadorRevelado.disconnect();
+    setTimeout(() => sticky.classList.remove("revelando"), 3200);
+  },
+  { threshold: 0.25 },
+);
+observadorRevelado.observe(sticky);
