@@ -14,4 +14,5 @@ El rediseño se trabaja en la rama `claude/admiring-carson-jqybwj`. La portada v
 4. **Benjamín diseña y modela él mismo** (TV en 3D, texturas 2D estilo Arcane / Spider-Verse, stickers). Lo que produzca un agente es una base editable, no la versión final.
 5. Respeta «reducir movimiento»: sin rastro de cursor ni animaciones largas.
 6. **Cursor B · Fósforo** (elegido por Benjamín): mira fina con una línea roja que se apaga lento; cambia sobre fotos, videos y enlaces.
-7. **Única excepción a los rótulos:** la sección de contacto dice «Contacto» y su formulario lleva etiquetas en los campos.
+7. **Peso:** en computador la página puede ser pesada y tardar en cargar; en celular (la visita más común) debe ser lo más liviana posible. Idea en estudio para la entrada: `docs/rediseno/05-idea-tv-berger.md`.
+8. **Única excepción a los rótulos:** la sección de contacto dice «Contacto» y su formulario lleva etiquetas en los campos.
