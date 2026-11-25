@@ -4,7 +4,7 @@ Portafolio de Benjamín Bravo, cineasta y fotógrafo chileno. Sitio estático en
 
 ## Rediseño en curso
 
-El rediseño se trabaja en la rama `claude/admiring-carson-jqybwj` y se decide primero en Figma: https://www.figma.com/design/Ln30OsRkhUMcGoTd4unp8i. Las decisiones están en `docs/rediseno/` (la más reciente manda). No se toca el código del sitio hasta que Benjamín apruebe el diseño.
+El rediseño se trabaja en la rama `claude/admiring-carson-jqybwj`. La portada v1 ya está en código (`docs/rediseno/03-portada-en-codigo.md` y `04-plan-implementacion.md`). Los cambios de diseño nuevos se acuerdan primero con Benjamín, en Figma (https://www.figma.com/design/Ln30OsRkhUMcGoTd4unp8i) o en `docs/rediseno/`; la decisión más reciente manda. Cómo editar textos y datos: `LEEME.md`.
 
 ## Principios que no se negocian
 
@@ -13,3 +13,5 @@ El rediseño se trabaja en la rama `claude/admiring-carson-jqybwj` y se decide p
 3. **Todo aparece desde la oscuridad:** la carga, las fotos al entrar en pantalla y el TV al encenderse se «revelan» de negro a rojo.
 4. **Benjamín diseña y modela él mismo** (TV en 3D, texturas 2D estilo Arcane / Spider-Verse, stickers). Lo que produzca un agente es una base editable, no la versión final.
 5. Respeta «reducir movimiento»: sin rastro de cursor ni animaciones largas.
+6. **Cursor B · Fósforo** (elegido por Benjamín): mira fina con una línea roja que se apaga lento; cambia sobre fotos, videos y enlaces.
+7. **Única excepción a los rótulos:** la sección de contacto dice «Contacto» y su formulario lleva etiquetas en los campos.
