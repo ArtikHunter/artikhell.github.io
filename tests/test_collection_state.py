@@ -12,6 +12,7 @@ class CollectionStateTests(unittest.TestCase):
     tearDown = portfolio.PortfolioTests.tearDown
     gallery = portfolio.PortfolioTests.gallery
     archive = portfolio.PortfolioTests.archive
+    esperar_carga = portfolio.PortfolioTests.esperar_carga
 
     def test_swapping_collections_keeps_each_explored_photo(self):
         self.gallery()

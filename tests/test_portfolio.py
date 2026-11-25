@@ -59,12 +59,19 @@ class PortfolioTests(unittest.TestCase):
         )
         self.page.add_init_script("Math.random = () => .42")
         self.page.goto(self.base_url, wait_until="networkidle")
+        self.esperar_carga()
 
     def tearDown(self):
         try:
             self.assertEqual(self.errors, [], "Uncaught JavaScript errors")
         finally:
             self.context.close()
+
+    def esperar_carga(self):
+        """La pantalla de carga bloquea el scroll hasta que la página está lista."""
+        self.page.wait_for_function(
+            "document.documentElement.classList.contains('listo')", timeout=8000
+        )
 
     def gallery(self, progress=0.44):
         self.page.evaluate(
@@ -223,6 +230,7 @@ class PortfolioTests(unittest.TestCase):
         self.page.route("**/*", lambda route: route.continue_()
                         if urlsplit(route.request.url).hostname == "127.0.0.1" else route.abort())
         self.page.goto(self.base_url, wait_until="networkidle")
+        self.esperar_carga()
         self.gallery()
         eye = self.page.locator("#toggle-overlay")
         eye.tap()
@@ -334,6 +342,7 @@ class PortfolioTests(unittest.TestCase):
     def test_missing_photo_fallback_and_recovery(self):
         self.page.route("**/DR-1.jpg", lambda route: route.fulfill(status=404, body="missing"))
         self.page.reload(wait_until="networkidle")
+        self.esperar_carga()
         self.page.wait_for_function("document.querySelector('#featured-fallback').classList.contains('is-visible')")
         self.assertIn("is-missing", self.page.locator("#featured-image").get_attribute("class") or "")
         self.assertIn("is-missing", self.page.locator("#featured-image-full").get_attribute("class") or "")
@@ -365,6 +374,7 @@ class PortfolioTests(unittest.TestCase):
     def test_motion_preference_changes_do_not_accumulate_waves(self):
         self.page.emulate_media(reduced_motion="reduce")
         self.page.reload(wait_until="networkidle")
+        self.esperar_carga()
         self.page.wait_for_function("reduceMotion.matches")
         for x in range(200, 800, 100):
             self.page.mouse.move(x, 400)
@@ -469,6 +479,7 @@ class PortfolioTests(unittest.TestCase):
         self.page.route("**/DR-1.jpg", lambda route: route.fulfill(
             status=200, content_type="image/png", body=base64.b64decode(pattern)))
         self.page.reload(wait_until="networkidle")
+        self.esperar_carga()
         self.page.add_style_tag(content="""
             .featured-lower, .eye-control, .fullscreen-specs, .gallery-instructions,
             .site-header, #archive-index { visibility:hidden !important; }

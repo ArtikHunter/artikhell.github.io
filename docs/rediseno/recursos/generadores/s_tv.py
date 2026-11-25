@@ -142,8 +142,10 @@ def side_matrix(ox, oy, sc):
     return f'matrix({f(DEPTH[0]*sc)} {f(DEPTH[1]*sc)} 0 {f(sc)} {f(ox)} {f(oy)})'
 
 
-def tv_svg(screen_href, side_sticker=''):
+def tv_svg(screen_href, side_sticker='', solo_marco=False):
+    """solo_marco=True deja la pantalla transparente (el contenido va en HTML debajo)."""
     o = []
+    vidrio = []
     o.append('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1100 960" width="1100" height="960">')
     o.append('<defs>')
     o.append(f'<clipPath id="tvHull"><path d="{pts_path(HULL)}"/></clipPath>')
@@ -152,7 +154,12 @@ def tv_svg(screen_href, side_sticker=''):
     o.append(f'<clipPath id="tvScr"><path d="{pts_path(rrect_pts(SX, SY, SX + SW, SY + SH, SR))}"/></clipPath>')
     o.append('<radialGradient id="tvVig" cx="50%" cy="48%" r="62%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".7"/></radialGradient>')
     o.append('<linearGradient id="tvGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6e8" stop-opacity=".34"/><stop offset=".45" stop-color="#fff6e8" stop-opacity="0"/></linearGradient>')
+    if solo_marco:
+        o.append(f'<mask id="tvAgujero" maskUnits="userSpaceOnUse" x="0" y="0" width="1100" height="960"><rect width="1100" height="960" fill="#fff"/><path d="{pts_path(rrect_pts(SX, SY, SX + SW, SY + SH, SR))}" fill="#000"/></mask>')
+        o.append('<filter id="tvBlur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="9"/></filter>')
     o.append('</defs>')
+    if solo_marco:
+        o.append('<g mask="url(#tvAgujero)">')
 
     # registro corrido (impresión desfasada) detrás de todo
     o.append(f'<g transform="translate(7 6)" fill="none" stroke="#ff5c3c" stroke-width="5" opacity=".6" stroke-linejoin="round"><path d="{pts_path(HULL)}"/></g>')
@@ -207,12 +214,17 @@ def tv_svg(screen_href, side_sticker=''):
     o.append(f'<path d="{pts_path(bez)}" fill="#1c0b09" stroke="{INK}" stroke-width="6"/>')
     o.append(tapered(curve((196, 380), (196, 700), -8), 5, CREAM, .22))
     o.append(tapered(curve((240, 346), (640, 346), 4), 4, CREAM, .2))
-    o.append(f'<g clip-path="url(#tvScr)"><image href="{screen_href}" x="{SX}" y="{SY}" width="{SW}" height="{SH}" preserveAspectRatio="xMidYMid slice"/>')
-    o.append(f'<rect x="{SX}" y="{SY}" width="{SW}" height="{SH}" fill="url(#tvVig)"/>')
-    o.append(f'<path d="M{SX} {SY} L{SX + 300} {SY} C{SX + 210} {SY + 70} {SX + 120} {SY + 170} {SX + 70} {SY + SH} L{SX} {SY + SH} Z" fill="url(#tvGlass)"/>')
-    o.append(f'<path d="M{SX + 28} {SY + 70} C{SX + 34} {SY + 40} {SX + 52} {SY + 24} {SX + 92} {SY + 20}" stroke="#fff6e8" stroke-width="6" stroke-linecap="round" fill="none" opacity=".55"/>')
-    o.append('</g>')
-    o.append(f'<path d="{pts_path(rrect_pts(SX, SY, SX + SW, SY + SH, SR))}" fill="none" stroke="{INK}" stroke-width="5"/>')
+    brillo = (f'<path d="M{SX} {SY} L{SX + 300} {SY} C{SX + 210} {SY + 70} {SX + 120} {SY + 170} {SX + 70} {SY + SH} L{SX} {SY + SH} Z" fill="url(#tvGlass)"/>'
+              f'<path d="M{SX + 28} {SY + 70} C{SX + 34} {SY + 40} {SX + 52} {SY + 24} {SX + 92} {SY + 20}" stroke="#fff6e8" stroke-width="6" stroke-linecap="round" fill="none" opacity=".55"/>')
+    borde = f'<path d="{pts_path(rrect_pts(SX, SY, SX + SW, SY + SH, SR))}" fill="none" stroke="{INK}" stroke-width="5"/>'
+    if solo_marco:
+        sombra = f'<path d="{pts_path(rrect_pts(SX, SY, SX + SW, SY + SH, SR))}" fill="none" stroke="#000" stroke-width="26" opacity=".55" filter="url(#tvBlur)"/>'
+        vidrio.append(f'<g clip-path="url(#tvScr)">{sombra}{brillo}</g>{borde}')
+    else:
+        o.append(f'<g clip-path="url(#tvScr)"><image href="{screen_href}" x="{SX}" y="{SY}" width="{SW}" height="{SH}" preserveAspectRatio="xMidYMid slice"/>')
+        o.append(f'<rect x="{SX}" y="{SY}" width="{SW}" height="{SH}" fill="url(#tvVig)"/>')
+        o.append(brillo + '</g>')
+        o.append(borde)
 
     # panel: perillas, parlante, placa
     def knob(cx, cy, r, ang, ticks=12):
@@ -289,6 +301,9 @@ def tv_svg(screen_href, side_sticker=''):
         o.append(f'<path d="M{f(x)} {f(y)} l{f(rng.uniform(-9, 9))} {f(rng.uniform(-8, 8))} l{f(rng.uniform(-6, 6))} {f(rng.uniform(4, 9))}" stroke="#7d7a73" stroke-width="1.5" fill="none"/>')
     o.append(f'<path d="M{fx - 16} {fy - 10} l10 -6 l6 8 z" fill="#ffffff" opacity=".85"/>')
     o.append(f'<path d="M{fx + 6} {fy + 6} l9 -3 l2 7 z" fill="#ffffff" opacity=".6"/>')
+    if solo_marco:
+        o.append('</g>')
+        o.extend(vidrio)
     o.append('</svg>')
     return ''.join(o)
 
@@ -414,16 +429,17 @@ def st_altiro():
 
 
 STICKERS = {'perro': st_perro(), 'copihue': st_copihue(), 'diablo': st_diablo(), 'fia': st_fia(), 'estrella': st_estrella(), 'altiro': st_altiro()}
-meta = {}
-for k, (svg, w, h) in STICKERS.items():
+if __name__ == '__main__':
+  meta = {}
+  for k, (svg, w, h) in STICKERS.items():
     open(os.path.join(OUT, f's_st_{k}.svg'), 'w').write(svg)
     meta[k] = [w, h]
 
-# sticker «Hoy no se fía» proyectado en el costado (va horneado en el raster)
-fia_svg, fw, fh = STICKERS['fia']
-inner = fia_svg.split('>', 1)[1].rsplit('</svg>', 1)[0]
-side = f'<g transform="{side_matrix(898, 520, .52)}">{inner}</g>'
-open(os.path.join(OUT, 's_tv_full.svg'), 'w').write(tv_svg('s_tv_screen.jpg', ''))
-open(os.path.join(OUT, 's_tv_vec.svg'), 'w').write(tv_svg('assets/s_tv_screen.jpg', ''))
-json.dump(meta, open(os.path.join(OUT, 's_stickers.json'), 'w'))
-print('ok', {k: len(v[0]) for k, v in STICKERS.items()}, len(open(os.path.join(OUT, 's_tv_full.svg')).read()))
+  # sticker «Hoy no se fía» proyectado en el costado (va horneado en el raster)
+  fia_svg, fw, fh = STICKERS['fia']
+  inner = fia_svg.split('>', 1)[1].rsplit('</svg>', 1)[0]
+  side = f'<g transform="{side_matrix(898, 520, .52)}">{inner}</g>'
+  open(os.path.join(OUT, 's_tv_full.svg'), 'w').write(tv_svg('s_tv_screen.jpg', ''))
+  open(os.path.join(OUT, 's_tv_vec.svg'), 'w').write(tv_svg('assets/s_tv_screen.jpg', ''))
+  json.dump(meta, open(os.path.join(OUT, 's_stickers.json'), 'w'))
+  print('ok', {k: len(v[0]) for k, v in STICKERS.items()}, len(open(os.path.join(OUT, 's_tv_full.svg')).read()))
